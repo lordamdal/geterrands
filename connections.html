@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Rosa works</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .group { margin-top: 44px; }
+  .group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 14px; flex-wrap: wrap; }
+  .group-head h2 { font-size: 30px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .tile { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; min-height: 160px; box-shadow: var(--shadow-sm); transition: box-shadow .2s, transform .2s; }
+  .tile:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .tile .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .tile .top .ic { width: 26px; height: 26px; color: var(--navy); }
+  .tile strong { font-size: 18px; font-weight: 550; }
+  .tile .d { font-size: 15px; color: var(--ink-2); }
+  .will li { display: flex; gap: 10px; padding: 5px 0; }
+  .will .ic { width: 18px; height: 18px; margin-top: 4px; }
+  .drawer-head { padding: 22px 24px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .drawer-head h3 { font-family: var(--serif); font-weight: 650; font-size: 26px; letter-spacing: -0.02em; }
+  .drawer-foot { padding: 16px 24px 22px; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div id="content">
+    <h1>Connections</h1>
+    <p class="lead" style="margin-top:14px">Where your helpers work and the tools they use. Every one turns on the same way: tap it, read one sentence, turn it on. Shown for Rosa; pick another helper on its own page.</p>
+
+    <section class="group">
+      <div class="group-head"><h2>How customers reach Rosa</h2><span class="small muted">3 on, 1 waiting</span></div>
+      <div class="tiles" data-group></div>
+    </section>
+    <section class="group">
+      <div class="group-head"><h2>How your team reaches Rosa</h2><span class="small muted">Rosa recognizes each of you</span></div>
+      <div class="tiles" data-group></div>
+    </section>
+    <section class="group">
+      <div class="group-head"><h2>Tools Rosa can use</h2><span class="small muted">Only with your OK</span></div>
+      <div class="tiles" data-group></div>
+    </section>
+</div>
+
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="drawer-head"><h3 id="dTitle"></h3><button class="icon-btn" id="dClose" aria-label="Close"><i data-icon="x"></i></button></div>
+  <div class="drawer-body" id="dBody"></div>
+  <div class="drawer-foot" id="dFoot"></div>
+</aside>
+<div class="scrim" id="dScrim"></div>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script src="studio.js"></script>
+<script>
+studioShell('connections');
+/* Each connection: same shape, so every one looks and behaves alike (law of similarity). */
+const C = [
+  [ // customers
+    { id: 'calls', ic: 'phone', name: 'Phone calls', d: '(216) 555-0148', st: 'on', what: 'Customers call her number and she answers, day and night.', will: ['Answer, give hours and prices, book drop-offs'], wont: ['Never promise same-day repairs'], cta: 'Turn off calls' },
+    { id: 'texts', ic: 'sms', name: 'Text messages', d: 'Same number', st: 'on', what: 'Customers text her number and she replies within seconds.', will: ['Reply to texts and send reminders'], wont: ['Never send ads or promotions'], cta: 'Turn off texts' },
+    { id: 'wa', ic: 'whatsapp', name: 'WhatsApp', d: 'Same number', st: 'on', what: 'Customers who use WhatsApp can message the same number.', will: ['Reply in the customer\'s language'], wont: ['Never message people who didn\'t write first'], cta: 'Turn off WhatsApp' },
+    { id: 'web', ic: 'chat', name: 'Chat on your website', d: 'morettishoerepair.com', st: 'wait', stText: 'Waiting on Marco', what: 'A small chat button on your website. Someone who manages your site pastes two lines in.', will: ['Answer visitors on your website'], wont: ['Never change anything else on your site'], cta: 'Text the steps to Marco again', alt: 'Send them to someone else' },
+    { id: 'mail', ic: 'mail', name: 'Her own email', d: 'rosa@moretti.errand.mail', st: 'off', what: 'Rosa gets her own email address. Put it on your website and receipts.', will: ['Answer customer emails from her own address'], wont: ['Never touch your personal Gmail'], cta: 'Turn on her email', time: 'Ready instantly' },
+    { id: 'ig', ic: 'heart', name: 'Facebook and Instagram', d: 'Direct messages', st: 'off', what: 'Rosa answers messages sent to your shop\'s Facebook and Instagram pages. You sign in once.', will: ['Answer direct messages'], wont: ['Never post, comment or like anything'], cta: 'Sign in to Facebook', time: 'About 1 minute' },
+    { id: 'tg', ic: 'telegram', name: 'Telegram', d: 'Search "Moretti Shoe Repair"', st: 'off', what: 'Rosa gets a Telegram account customers can find by your shop name.', will: ['Answer Telegram messages'], wont: ['Never join groups'], cta: 'Turn on Telegram', time: 'About 10 seconds' }
+  ],
+  [ // owner
+    { id: 'you-sms', ic: 'sms', name: 'Text from your cell', d: '(216) 555-0192', st: 'on', what: 'Text Rosa\'s number from your cell to give her instructions. She knows it\'s you.', will: ['Take instructions like "we\'re closed Thursday"', 'Ask you yes-or-no questions'], wont: ['Never take instructions from other numbers'], cta: 'Change your cell number' },
+    { id: 'you-call', ic: 'phone', name: 'Call her', d: 'From your cell', st: 'on', what: 'Call Rosa\'s number from your cell and talk to her like an assistant.', will: ['Read you tomorrow\'s bookings', 'Take changes by voice'], wont: [], cta: 'Turn off' },
+    { id: 'you-mail', ic: 'mail', name: 'Email', d: 'sal.moretti@gmail.com', st: 'on', what: 'She emails you a summary every night. Reply to tell her anything.', will: ['Send a nightly summary at 6'], wont: [], cta: 'Change the time' },
+    { id: 'you-wa', ic: 'whatsapp', name: 'WhatsApp', d: 'Not set up', st: 'off', what: 'Talk to Rosa on WhatsApp instead of texts, if you prefer.', will: ['Same as texting'], wont: [], cta: 'Use WhatsApp instead', time: 'About 10 seconds' }
+  ],
+  [ // tools
+    { id: 'gcal', ic: 'calendar', name: 'Google Calendar', d: 'Adds drop-offs', st: 'on', what: 'Rosa sees when you\'re busy and adds drop-off appointments.', will: ['See busy times', 'Add drop-offs'], wont: ['Never read or change your other events'], cta: 'Turn off' },
+    { id: 'site', ic: 'globe', name: 'Your website', d: 'Re-read every Monday', st: 'on', what: 'Rosa re-reads your website every week, so new prices reach her automatically.', will: ['Learn changes to hours and prices'], wont: [], cta: 'Re-read it now' },
+    { id: 'square', ic: 'card', name: 'Take deposits with Square', d: 'For rush jobs', st: 'off', what: 'Rosa can text a payment link for rush jobs. Money goes straight to your Square account.', will: ['Text customers a payment link'], wont: ['Never see card numbers', 'Never refund without asking you'], cta: 'Sign in to Square', time: 'About 1 minute' },
+    { id: 'reviews', ic: 'star', name: 'Google reviews', d: 'Ask happy customers', st: 'off', what: 'A day after pickup, Rosa texts happy customers a link to leave a review.', will: ['Ask once, politely'], wont: ['Never ask someone who complained'], cta: 'Turn on reviews', time: 'Ready instantly' },
+    { id: 'supplier', ic: 'truck', name: 'Call suppliers for you', d: 'Reorder heels and glue', st: 'off', what: 'When you say "order more heels", Rosa calls or emails your supplier and tells you what they said.', will: ['Place orders you approve'], wont: ['Never spend money without your yes'], cta: 'Add a supplier', time: 'About 2 minutes' }
+  ]
+];
+
+const pillFor = c => c.st === 'on' ? '<span class="pill on">On</span>' : c.st === 'wait' ? `<span class="pill wait">${c.stText}</span>` : '<span class="pill off">Off</span>';
+
+function render() {
+  $$('[data-group]').forEach((g, gi) => {
+    g.innerHTML = C[gi].map(c => `<button class="tile" data-id="${c.id}">
+      <span class="top">${icon(c.ic)}${pillFor(c)}</span>
+      <strong>${c.name}</strong><span class="d">${c.d}</span></button>`).join('');
+  });
+}
+const find = id => C.flat().find(c => c.id === id);
+
+function openDrawer(c) {
+  const N = agentName();
+  $('#dTitle').textContent = c.name;
+  $('#dBody').innerHTML = `<div class="row">${icon(c.ic)} ${pillFor(c)}</div>
+    <p style="font-size:20px">${c.what.replaceAll('Rosa', N)}</p>
+    ${c.will.length ? `<div><p class="label">She will</p><ul class="will" style="list-style:none;padding:0;margin:6px 0 0">${c.will.map(w => `<li>${icon('check')}<span>${w}</span></li>`).join('')}</ul></div>` : ''}
+    ${c.wont.length ? `<div><p class="label">She won't</p><ul class="will" style="list-style:none;padding:0;margin:6px 0 0">${c.wont.map(w => `<li>${icon('x')}<span>${w}</span></li>`).join('')}</ul></div>` : ''}
+    ${c.time ? `<p class="small muted">${icon('clock', '')} ${c.time}. You can turn it off anytime.</p>` : '<p class="small muted">You can change this anytime.</p>'}`;
+  $('#dBody').querySelectorAll('.small .ic').forEach(i => { i.style.display = 'inline'; i.style.width = '16px'; i.style.verticalAlign = '-3px'; });
+  $('#dFoot').innerHTML = `<button class="btn ${c.st === 'off' ? 'btn-primary' : ''}" id="dGo">${c.cta}</button>${c.alt ? `<button class="btn btn-ghost">${c.alt}</button>` : ''}<button class="btn btn-ghost" id="dNo">Close</button>`;
+  $('#dGo').onclick = async () => {
+    if (c.st !== 'off') return closeDrawer();
+    $('#dGo').textContent = 'Turning on…'; await wait(900);
+    c.st = 'on'; render(); openDrawer(c);
+    $('#dFoot').insertAdjacentHTML('afterbegin', `<p style="width:100%;font-weight:700;color:var(--ok)">${c.name} is on. ${N} is working there now.</p>`);
+  };
+  $('#dNo').onclick = closeDrawer;
+  $('#drawer').classList.add('open'); $('#dScrim').classList.add('open');
+  $('#dGo').focus();
+}
+function closeDrawer() { $('#drawer').classList.remove('open'); $('#dScrim').classList.remove('open'); }
+$('#dClose').onclick = closeDrawer; $('#dScrim').onclick = closeDrawer;
+document.addEventListener('click', e => { const t = e.target.closest('.tile'); if (t) openDrawer(find(t.dataset.id)); });
+render();
+</script>
+</body>
+</html>

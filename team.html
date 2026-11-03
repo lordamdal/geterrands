@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team | Errand</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .tgrid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; margin-top: 24px; }
+  .members { background: #fff; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .mrow { display: grid; grid-template-columns: minmax(220px, 1.4fr) 200px minmax(160px, 1fr) 40px; gap: 16px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .mrow.head { border-top: 0; background: #FBFBFA; font-size: 13.5px; color: var(--ink-3); padding-top: 11px; padding-bottom: 10px; }
+  .mrow .who { display: flex; gap: 12px; align-items: center; }
+  .mrow .who strong { font-weight: 600; display: block; line-height: 1.25; }
+  .mrow .acc { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mrow .acc .tag { font-size: 13.5px; }
+  .mrow.pending { background: #FFFCF4; }
+  .roles li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .roles li:last-child { border-bottom: 0; }
+  .roles strong { font-weight: 600; }
+  .route { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+  .route:first-of-type { border-top: 0; }
+  .route .ppl { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .pchip { display: inline-flex; gap: 6px; align-items: center; border-radius: 99px; padding: 3px 10px 3px 3px; border: 1px solid var(--line-2); background: #fff; font-size: 14px; cursor: pointer; }
+  .pchip[aria-pressed="false"] { opacity: .45; }
+  .pchip .pava { box-shadow: none; }
+  .log li { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .log li:last-child { border-bottom: 0; }
+  .log b { font-weight: 600; }
+  .log .t { display: block; font-size: 13px; color: var(--ink-3); }
+  @media (max-width: 1200px) { .tgrid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 900px) { .mrow.head { display: none; } .mrow { grid-template-columns: 1fr auto; } .mrow > :nth-child(2), .mrow > :nth-child(3) { grid-column: 1 / -1; } .route { grid-template-columns: 1fr; } .route .ppl { justify-content: flex-start; } }
+</style>
+</head>
+<body>
+<div id="content">
+  <div class="spread">
+    <div><h1>Team</h1><p class="muted" style="margin-top:6px">Who can see, change and answer for your helpers. Everyone signs in with a text message code; no passwords.</p></div>
+    <button class="btn btn-primary" onclick="openInvite()"><i data-icon="plus"></i> Invite someone</button>
+  </div>
+
+  <div class="tgrid">
+    <div class="stack-lg">
+      <div class="members" id="members"></div>
+
+      <div class="panel">
+        <h3>Who hears about what</h3>
+        <p class="small muted" style="margin-top:4px">Helpers text these people. Tap a name to turn it on or off.</p>
+        <div id="routes" style="margin-top:8px"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Everything that changed</h3>
+        <p class="small muted" style="margin-top:4px">A record of who changed what, kept for a year.</p>
+        <ul class="log" id="log" style="list-style:none;padding:0;margin:8px 0 0"></ul>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <h3>What each role can do</h3>
+      <ul class="roles" id="roles" style="list-style:none;padding:0;margin:6px 0 0"></ul>
+    </aside>
+  </div>
+</div>
+
+<div class="scrim" id="invite" role="dialog" aria-modal="true" aria-labelledby="ivT">
+  <div class="modal" style="width:min(560px,100%)">
+    <div class="modal-head"><h3 id="ivT">Invite someone</h3></div>
+    <div class="modal-body">
+      <div class="field"><input id="ivName" placeholder="Their name" aria-label="Their name"></div>
+      <div class="field"><input id="ivContact" placeholder="Phone number or email" aria-label="Phone number or email"></div>
+      <div><p class="label" style="margin-bottom:8px">What can they do?</p><div id="ivRoles"></div></div>
+      <div><p class="label" style="margin-bottom:8px">Which helpers?</p><div class="row" id="ivHelpers"></div></div>
+      <div class="field"><input id="ivNote" placeholder="Add a personal note (optional)" aria-label="Personal note"></div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close="invite">Cancel</button><button class="btn btn-primary" id="ivGo">Send invite</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script src="studio.js"></script>
+<script>
+studioShell('team');
+
+function accessTags(p) {
+  if (p.role === 'owner' || !p.helpers) return '<span class="tag">All helpers</span>';
+  return p.helpers.map(id => `<span class="tag">${helperDemo(wsHelper(id)).name}</span>`).join('');
+}
+function roleSelect(p) {
+  if (p.role === 'owner') return '<span class="small">Owner</span>';
+  return `<select class="sel" data-p="${p.id}" aria-label="Role for ${esc(p.first)}">${Object.entries(ROLES).filter(([k]) => k !== 'owner').map(([k, r]) => `<option value="${k}" ${k === p.role ? 'selected' : ''}>${r.label}</option>`).join('')}</select>`;
+}
+function drawMembers() {
+  $('#members').innerHTML = `<div class="mrow head"><span>Person</span><span>Can</span><span>Helpers</span><span></span></div>` +
+    WS.team.map(p => `<div class="mrow"><span class="who">${personAva(p, 40)}<span><strong>${esc(p.name)}${p.id === WS.me ? ' (you)' : ''}</strong><span class="small faint">${esc(p.how)}, ${esc(p.contact)}</span></span></span>
+      <span>${roleSelect(p)}</span><span class="acc">${accessTags(p)}</span>
+      <span>${p.role === 'owner' ? '' : `<button class="icon-btn" aria-label="Remove ${esc(p.first)}" data-rm="${p.id}">${icon('x')}</button>`}</span></div>`).join('') +
+    WS.invites.map((v, n) => `<div class="mrow pending"><span class="who"><span class="pava" style="width:40px;height:40px;background:var(--accent-tint);color:#7A5200">${icon('mail')}</span><span><strong>${esc(v.name)}</strong><span class="small faint">Invited ${esc(v.sent.toLowerCase())} by text, ${esc(v.contact)}</span></span></span>
+      <span class="small">${ROLES[v.role].label}</span><span class="acc"><span class="pill wait">Hasn't joined yet</span></span>
+      <span><button class="icon-btn" aria-label="Send again" title="Send again" data-resend="${n}">${icon('refresh')}</button></span></div>`).join('');
+}
+drawMembers();
+$('#members').addEventListener('change', e => {
+  const s = e.target.closest('select[data-p]'); if (!s) return;
+  const p = person(s.dataset.p); p.role = s.value; toast(`${p.first} can now: ${ROLES[p.role].label.toLowerCase()}.`); drawRoles();
+});
+$('#members').addEventListener('click', e => {
+  const rm = e.target.closest('[data-rm]');
+  if (rm) { const p = person(rm.dataset.rm); if (confirm(`Remove ${p.first}? They won't be able to see your helpers anymore.`)) { WS.team.splice(WS.team.indexOf(p), 1); drawMembers(); toast(`${p.first} was removed.`); } }
+  const rs = e.target.closest('[data-resend]'); if (rs) toast(`Sent again to ${WS.invites[rs.dataset.resend].name}.`);
+});
+
+function drawRoles() {
+  $('#roles').innerHTML = Object.entries(ROLES).map(([k, r]) => {
+    const who = WS.team.filter(p => p.role === k);
+    return `<li><strong>${r.label}</strong><p class="small muted" style="margin-top:2px">${r.d}</p>${who.length ? `<div class="row" style="gap:6px;margin-top:8px">${who.map(p => `<span class="pchip" style="cursor:default">${personAva(p, 22)}${p.first}</span>`).join('')}</div>` : ''}</li>`;
+  }).join('');
+}
+drawRoles();
+
+const ROUTES = [
+  ['A customer is upset', ['sal', 'ana']], ['A decision about money', ['sal']], ['A rush or special request', ['sal', 'ana']],
+  ['Daily summary at 6pm', ['sal', 'marco']], ['Monthly money report', ['sal', 'dana']], ['A helper stops working', ['sal', 'marco']]
+];
+$('#routes').innerHTML = ROUTES.map(([what, on], n) => `<div class="route"><span>${what}</span><span class="ppl">${WS.team.map(p => `<button class="pchip" aria-pressed="${on.includes(p.id)}" data-r="${n}">${personAva(p, 22)}${p.first}</button>`).join('')}</span></div>`).join('');
+$('#routes').addEventListener('click', e => { const c = e.target.closest('.pchip'); if (c) c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
+
+const LOG = [...WS.activity.filter(a => person(a[0])), ['sal', 'invited Lucia to handle requests', null, 'Yesterday'], ['sal', 'gave Dana access to Penny and Max', null, 'Oct 20'], ['sal', 'invited Marco and made him able to change helpers', null, 'Oct 14']];
+$('#log').innerHTML = LOG.map(([w, what, h, when]) => `<li>${personAva(person(w), 28)}<span><b>${person(w).first}</b> ${esc(what)}<span class="t">${when}</span></span></li>`).join('');
+
+/* Invite */
+$('#ivRoles').innerHTML = Object.entries(ROLES).filter(([k]) => k !== 'owner').map(([k, r], i) =>
+  `<button class="option" aria-checked="${i === 1}" data-v="${k}"><span class="radio"></span><span><strong>${r.label}</strong><span class="d">${r.d}</span></span></button>`).join('');
+$('#ivHelpers').innerHTML = `<button class="chip" aria-pressed="true" data-all>All helpers</button>` + WS.helpers.map(h => `<button class="chip" aria-pressed="false" data-h="${h.id}">${helperDemo(h).name}</button>`).join('');
+document.addEventListener('click', e => {
+  const o = e.target.closest('#ivRoles .option'); if (o) $$('#ivRoles .option').forEach(x => x.setAttribute('aria-checked', String(x === o)));
+  const c = e.target.closest('#ivHelpers .chip');
+  if (c) {
+    if (c.hasAttribute('data-all')) { $$('#ivHelpers .chip').forEach(x => x.setAttribute('aria-pressed', String(x === c))); }
+    else { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); $('#ivHelpers [data-all]').setAttribute('aria-pressed', String(!$$('#ivHelpers [data-h][aria-pressed="true"]').length)); }
+  }
+});
+function openInvite() { openScrim('invite'); setTimeout(() => $('#ivName').focus(), 50); }
+$('#ivGo').onclick = () => {
+  const name = $('#ivName').value.trim() || 'New teammate', contact = $('#ivContact').value.trim() || '(216) 555-0100';
+  const role = $('#ivRoles .option[aria-checked="true"]').dataset.v;
+  WS.invites.push({ name, contact, role, sent: 'Just now' });
+  closeScrim('invite'); drawMembers();
+  toast(`Invite sent to ${name.split(' ')[0]}. They'll get a ${/@/.test(contact) ? 'email' : 'text'} with a link.`);
+  ['ivName', 'ivContact', 'ivNote'].forEach(id => $('#' + id).value = '');
+};
+if (location.hash === '#invite') openInvite();
+addEventListener('hashchange', () => { if (location.hash === '#invite') openInvite(); });
+$('#invite').addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target.id === 'invite') history.replaceState(null, '', 'team.html'); });
+</script>
+</body>
+</html>

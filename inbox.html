@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Needs you | Errand</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .ibox { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 0; background: #fff; border: 1px solid var(--line); border-radius: 24px; overflow: hidden; min-height: calc(100vh - 200px); margin-top: 18px; }
+  .ilist { border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+  .ifilt { display: flex; gap: 4px; padding: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .ifilt button { border: 0; background: transparent; padding: 7px 12px; border-radius: 99px; font-size: 14.5px; cursor: pointer; color: var(--ink-2); }
+  .ifilt button[aria-pressed="true"] { background: var(--bg-2); color: var(--ink); font-weight: 550; }
+  .iitem { display: grid; grid-template-columns: 36px 1fr; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); cursor: pointer; text-align: left; background: transparent; border-left: 3px solid transparent; width: 100%; border-top: 0; border-right: 0; }
+  .iitem:hover { background: #FBFBFA; }
+  .iitem[aria-selected="true"] { background: #FBFBFA; border-left-color: var(--marigold); }
+  .iitem.done { opacity: .6; }
+  .iitem h3 { font-size: 15.5px; line-height: 1.35; font-weight: 550; }
+  .iitem .meta { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+  .iitem .meta .pava { box-shadow: none; }
+  .idetail { padding: 26px 30px 30px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .idetail h2 { font-size: 28px; }
+  .dhead { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 15px; color: var(--ink-2); }
+  .assign { display: flex; gap: 10px; align-items: center; margin-left: auto; font-size: 14.5px; }
+  .convo-s { background: #F7F7F5; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .suggest { border-radius: 18px; border: 1px solid var(--line); padding: 16px 18px; box-shadow: inset 3px 0 0 var(--marigold); }
+  .suggest > * + * { margin-top: 10px; }
+  .team-notes { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .typing-n { font-size: 13.5px; color: var(--ink-3); display: flex; gap: 8px; align-items: center; }
+  .back { display: none; }
+  @media (max-width: 1000px) {
+    .ibox { grid-template-columns: minmax(0, 1fr); }
+    .ibox.detail .ilist { display: none; }
+    .ibox:not(.detail) .idetail { display: none; }
+    .back { display: inline-flex; align-self: flex-start; }
+    .idetail { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div id="content">
+  <div class="spread"><div><h1>Needs someone</h1><p class="muted" style="margin-top:6px">Decisions your helpers are waiting on. Anyone on the team can answer, from here or by text.</p></div></div>
+  <div class="ibox" id="ibox">
+    <div class="ilist">
+      <div class="ifilt" id="ifilt">
+        <button aria-pressed="true" data-f="open">Waiting</button><button aria-pressed="false" data-f="mine">Mine</button><button aria-pressed="false" data-f="done">Done</button>
+      </div>
+      <div id="items"></div>
+    </div>
+    <section class="idetail" id="detail" aria-live="polite"></section>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script src="studio.js"></script>
+<script>
+studioShell('inbox');
+let filter = 'open';
+let sel = new URLSearchParams(location.search).get('i') || WS.inbox.find(i => i.state === 'open').id;
+
+function list() {
+  const items = WS.inbox.filter(i => filter === 'done' ? i.state === 'done' : filter === 'mine' ? i.state === 'open' && i.assignee === WS.me : i.state === 'open');
+  $('#items').innerHTML = items.map(i => {
+    const h = wsHelper(i.h), d = helperDemo(h), p = person(i.assignee);
+    return `<button class="iitem ${i.state}" data-id="${i.id}" aria-selected="${i.id === sel}">${helperAva(h, 36)}<span><h3>${esc(i.title)}</h3>
+      <span class="meta"><span>${d.name}, ${i.when}</span><span style="margin-left:auto;display:inline-flex;gap:5px;align-items:center">${personAva(p, 18)}${p.id === WS.me ? 'You' : p.first}</span></span></span></button>`;
+  }).join('') || `<p class="muted" style="padding:24px">${filter === 'done' ? 'Nothing finished yet today.' : 'Nothing waiting. Your helpers have it handled.'}</p>`;
+}
+function detail() {
+  const i = WS.inbox.find(x => x.id === sel); if (!i) { $('#detail').innerHTML = ''; return; }
+  const h = wsHelper(i.h), d = helperDemo(h);
+  const opts = WS.team.filter(p => p.role !== 'viewer').map(p => `<option value="${p.id}" ${p.id === i.assignee ? 'selected' : ''}>${p.id === WS.me ? 'Me (Sal)' : p.first}</option>`).join('');
+  $('#detail').innerHTML = `<button class="btn btn-sm btn-ghost back" id="back">${icon('left')} All requests</button>
+    <div class="dhead">${helperAva(h, 30)}<span><b style="color:var(--ink);font-weight:600">${d.name}</b>, ${d.role.toLowerCase()}, about ${esc(i.who)}, ${i.when}</span>
+      <span class="assign"><span class="faint">Handled by</span><select class="sel" id="assignSel" ${i.state === 'done' ? 'disabled' : ''}>${opts}</select></span></div>
+    <h2>${esc(i.title)}</h2>
+    <p class="muted">${esc(i.detail)}</p>
+    <div class="convo-s">${i.convo.map(([w, t]) => `<div class="sms ${w === 'a' ? 'agent' : 'other'}"><div class="who">${w === 'a' ? d.name : esc(i.who)}</div>${esc(t)}</div>`).join('')}</div>
+    ${i.state === 'open' ? `<div class="suggest"><p class="label">${d.name} suggests</p><p>${esc(i.suggest)}</p>
+      <div class="row">${i.actions.map((a, n) => `<button class="btn btn-sm ${n === 0 ? 'btn-primary' : ''}" data-decide="${esc(a)}">${esc(a)}</button>`).join('')}</div>
+      <form class="field" id="own" style="min-height:48px"><input placeholder="Or answer in your own words" aria-label="Your answer"><button class="btn btn-sm btn-ink">Send</button></form></div>`
+    : `<div class="suggest" style="box-shadow:inset 3px 0 0 var(--ok)"><p class="label">Done</p><p>Handled by ${person(i.doneBy || i.assignee).first}${i.decision ? `: “${esc(i.decision)}”` : ''}.</p></div>`}
+    <div class="team-notes"><p class="label">Team notes, only your team sees these</p>
+      <div id="notes">${i.comments.map(([w, t, wh]) => noteHTML(w, t, wh)).join('')}</div>
+      ${i.id === 'i1' && i.state === 'open' ? `<p class="typing-n">${personAva(person('marco'), 18)} Marco is typing…</p>` : ''}
+      <form class="field" id="noteForm" style="min-height:48px"><input placeholder="Add a note. Type @ to mention someone" aria-label="Team note"><button class="btn btn-sm">Post</button></form></div>`;
+  hydrateIcons($('#detail'));
+  $('#ibox').classList.add('detail');
+  const back = $('#back'); if (back) back.onclick = () => $('#ibox').classList.remove('detail');
+  $('#assignSel').onchange = e => { i.assignee = e.target.value; list(); toast(`${person(i.assignee).first} will get a text about this.`); };
+  $$('[data-decide]').forEach(b => b.onclick = () => decide(i, b.dataset.decide));
+  const own = $('#own'); if (own) own.onsubmit = e => { e.preventDefault(); const v = own.querySelector('input').value.trim(); if (v) decide(i, v); };
+  $('#noteForm').onsubmit = e => {
+    e.preventDefault(); const v = $('#noteForm input').value.trim(); if (!v) return;
+    i.comments.push(['sal', v, 'Just now']); $('#notes').insertAdjacentHTML('beforeend', noteHTML('sal', v, 'Just now')); $('#noteForm input').value = '';
+    const m = v.match(/@(\w+)/); if (m) { const p = WS.team.find(x => x.first.toLowerCase() === m[1].toLowerCase()); if (p) toast(`${p.first} will get a text with your note.`); }
+  };
+  if (i.id === 'i1' && i.state === 'open' && !i._marco) {
+    i._marco = true;
+    setTimeout(() => {
+      if (sel !== 'i1' || i.state !== 'open') return;
+      const t = $('.typing-n'); if (t) t.remove();
+      i.comments.push(['marco', 'Agreed, I can come in Saturday morning to help if needed.', 'Just now']);
+      $('#notes').insertAdjacentHTML('beforeend', noteHTML('marco', 'Agreed, I can come in Saturday morning to help if needed.', 'Just now'));
+    }, 3000);
+  }
+}
+function noteHTML(w, t, wh) {
+  const p = person(w);
+  return `<div class="comment">${personAva(p, 28)}<div><p class="who"><b>${p.first}</b> ${wh}</p><div class="body">${esc(t).replace(/@(\w+)/g, '<b style="color:var(--green-2)">@$1</b>')}</div></div></div>`;
+}
+function decide(i, what) {
+  i.state = 'done'; i.decision = what; i.doneBy = WS.me;
+  const d = helperDemo(wsHelper(i.h));
+  toast(`Done. ${d.name} will take it from here.`);
+  const next = WS.inbox.find(x => x.state === 'open');
+  sel = next ? next.id : i.id; list(); detail();
+  const c = $('.sside .count'); const n = WS.inbox.filter(x => x.state === 'open').length; if (c) { c.textContent = n; if (!n) c.remove(); }
+}
+$('#items').addEventListener('click', e => { const b = e.target.closest('.iitem'); if (!b) return; sel = b.dataset.id; list(); detail(); });
+$('#ifilt').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; $$('#ifilt button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); list(); });
+list(); detail();
+if (!new URLSearchParams(location.search).get('i') && innerWidth <= 1000) $('#ibox').classList.remove('detail');
+</script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helper | Errand</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hhead { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .hhead .t { flex: 1; min-width: 220px; }
+  .hhead h1 { font-size: 36px; }
+  .editing { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-2); background: #fff; border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px 4px 4px; }
+  .editing .dotp { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite; }
+  .hgrid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; align-items: start; margin-top: 8px; }
+  .tabpane { padding-top: 24px; }
+  .tabpane > * + * { margin-top: 22px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .stat { background: var(--bg-2); border-radius: 16px; padding: 14px 16px; }
+  .stat b { display: block; font-family: var(--serif); font-size: 30px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.1; }
+  .stat span { font-size: 14px; color: var(--ink-2); }
+  .bars { display: flex; gap: 10px; align-items: flex-end; height: 140px; padding-top: 10px; }
+  .bars div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; font-size: 13px; color: var(--ink-3); }
+  .bars i { display: block; width: 100%; max-width: 46px; background: #CFE3D8; border-radius: 8px 8px 3px 3px; }
+  .bars div:last-child i { background: var(--green-2); }
+  .recent li { display: grid; grid-template-columns: 70px 26px 1fr; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; }
+  .recent li:last-child { border-bottom: 0; }
+  .recent .ic { width: 18px; height: 18px; color: var(--ink-2); margin-top: 2px; }
+  .recent .tm { font-size: 13.5px; color: var(--ink-3); }
+  .edit-block { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px; }
+  .edit-block > * + * { margin-top: 12px; }
+  .edit-block h3 { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .edit-block textarea, .edit-block input.txt { width: 100%; border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 14px; font-size: 16.5px; line-height: 1.5; resize: vertical; background: #fff; }
+  .edit-block textarea:focus, .edit-block input.txt:focus { outline: none; border-color: var(--green-2); box-shadow: 0 0 0 4px rgba(30,90,69,.12); }
+  .changed { font-size: 13.5px; color: #7A5200; background: var(--accent-tint); border-radius: 8px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; }
+  .changed s { color: var(--ink-3); }
+  .rule { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); font-size: 16px; }
+  .rule:first-of-type { border-top: 0; }
+  .rule .new { font-size: 12.5px; color: #7A5200; background: var(--accent-tint); border-radius: 99px; padding: 1px 8px; margin-left: 6px; }
+  .thread { grid-column: 1 / -1; background: #FBFBFA; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .thread .reply { display: flex; gap: 8px; }
+  .thread .reply input { flex: 1; border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 12px; font-size: 15px; }
+  .src li { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .src li:last-child { border-bottom: 0; }
+  .src .ico { width: 36px; height: 36px; border-radius: 10px; background: var(--bg-2); display: grid; place-items: center; }
+  .src .ico .ic { width: 18px; height: 18px; }
+  .noticed { border-left: 3px solid var(--marigold); background: #fff; border-radius: 0 16px 16px 0; padding: 14px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow-sm); }
+  .noticed p { flex: 1; min-width: 220px; }
+  .appr { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 16px; }
+  .appr.head { border-top: 0; font-size: 13.5px; color: var(--ink-3); padding-top: 0; }
+  .ver li { display: grid; grid-template-columns: 54px 1fr auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .ver li:last-child { border-bottom: 0; }
+  .ver .v { font-family: var(--serif); font-weight: 650; font-size: 18px; color: var(--ink-3); }
+  .tryp { position: sticky; top: 88px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; height: calc(100vh - 120px); max-height: 720px; overflow: hidden; }
+  .tryp .ph { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: center; }
+  .tryp .msgs { flex: 1; overflow: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; background: #F7F7F5; }
+  .tryp .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 12px 0; }
+  .tryp .chips .chip { min-height: 34px; font-size: 14px; padding: 0 12px; }
+  .tryp form { display: flex; gap: 8px; padding: 10px 12px 12px; }
+  .tryp form input { flex: 1; border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 12px; font-size: 15.5px; }
+  @media (max-width: 1200px) { .hgrid { grid-template-columns: minmax(0, 1fr); } .tryp { position: static; height: 520px; } }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .appr { grid-template-columns: 1fr; gap: 6px; } .appr.head { display: none; } }
+</style>
+</head>
+<body>
+<div id="content">
+  <div class="hhead">
+    <span id="hava"></span>
+    <div class="t"><h1 id="hname"></h1><p class="muted" id="hrole"></p></div>
+    <span class="editing" id="presence"></span>
+    <div class="row" style="gap:10px">
+      <span class="row small" style="gap:8px"><span id="stLabel"></span><button class="toggle" id="stToggle" aria-label="Working"></button></span>
+      <button class="btn btn-sm" onclick="openScrim('share')"><i data-icon="users"></i> Share</button>
+      <button class="btn btn-sm btn-primary" id="pubBtn" onclick="openScrim('publish')"></button>
+    </div>
+  </div>
+  <div class="draftbar hide" id="draftbar" style="margin-top:16px"></div>
+
+  <div class="hgrid">
+    <div>
+      <div class="tabs-s" role="tablist" id="tabs">
+        <button role="tab" data-t="overview" aria-selected="true">Overview</button>
+        <button role="tab" data-t="instructions">Instructions <span class="n" id="nDraft"></span></button>
+        <button role="tab" data-t="knowledge">What it knows</button>
+        <button role="tab" data-t="channels">Channels</button>
+        <button role="tab" data-t="approvals">Who decides</button>
+        <button role="tab" data-t="history">History</button>
+      </div>
+      <section class="tabpane" id="pane"></section>
+    </div>
+
+    <aside class="tryp" aria-label="Try your helper">
+      <div class="ph"><span id="tAva"></span><div style="flex:1"><strong style="font-weight:600" id="tName"></strong><p class="small faint" id="tSub">Testing the version with your latest changes</p></div><span class="pill blue" style="background:var(--accent-tint);color:#7A5200">Practice</span></div>
+      <div class="msgs" id="msgs"></div>
+      <div class="chips" id="tChips"></div>
+      <form id="tForm"><input id="tIn" placeholder="Type like a customer would" aria-label="Message"><button class="round-go" aria-label="Send"><i data-icon="up"></i></button></form>
+    </aside>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="scrim" id="publish" role="dialog" aria-modal="true" aria-labelledby="pbT">
+  <div class="modal">
+    <div class="modal-head"><h3 id="pbT">Publish changes?</h3></div>
+    <div class="modal-body"><p class="muted" id="pbText"></p><ul class="checklist" id="pbList"></ul></div>
+    <div class="modal-foot"><button class="btn" data-close="publish">Not yet</button><button class="btn btn-primary" id="pbGo">Publish</button></div>
+  </div>
+</div>
+<div class="scrim" id="share" role="dialog" aria-modal="true" aria-labelledby="shT">
+  <div class="modal">
+    <div class="modal-head"><h3 id="shT">Share this helper</h3></div>
+    <div class="modal-body">
+      <p class="muted">People you add here can see this helper. Pick what they can do.</p>
+      <div class="field"><input id="shWho" placeholder="Name, phone number or email" aria-label="Who"></div>
+      <select class="sel" id="shRole" aria-label="What they can do" style="width:100%;padding:12px 30px 12px 14px;font-size:16px">
+        <option value="approver">Can handle requests</option><option value="editor">Can change this helper</option><option value="viewer">Can only look</option>
+      </select>
+      <div><p class="label">Already here</p><ul class="people" id="shPeople" style="list-style:none;padding:0;margin:6px 0 0"></ul></div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close="share">Close</button><button class="btn btn-primary" id="shGo">Send invite</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script src="studio.js"></script>
+<script>
+const H = wsHelper(new URLSearchParams(location.search).get('h')) || WS.helpers[0];
+const D = helperDemo(H);
+const NAME = D.name;
+studioShell('helper:' + H.id);
+document.title = `${NAME} | Errand`;
+$('#hava').innerHTML = helperAva(H, 60);
+$('#hname').textContent = NAME;
+$('#hrole').textContent = `${D.role} for ${WS.name}`;
+$('#tAva').innerHTML = helperAva(H, 34); $('#tName').textContent = `Try ${NAME}`;
+
+/* ---------- Status ---------- */
+function drawStatus() {
+  const st = STATUS[H.status];
+  $('#stLabel').textContent = st[0];
+  $('#stToggle').setAttribute('aria-checked', String(H.status === 'working'));
+  $('#stToggle').disabled = H.status === 'draft';
+}
+drawStatus();
+$('#stToggle').addEventListener('click', () => setTimeout(() => {
+  H.status = $('#stToggle').getAttribute('aria-checked') === 'true' ? 'working' : 'paused';
+  drawStatus(); toast(H.status === 'working' ? `${NAME} is working again.` : `${NAME} is paused. Nothing new will be handled until you turn it back on.`);
+}));
+
+/* ---------- Presence and drafts ---------- */
+const marco = person('marco');
+$('#presence').innerHTML = H.draft ? `${personAva(marco, 26)}<i class="dotp"></i>Marco is editing` : `${personAva(marco, 26)}Marco viewed today`;
+const DRAFTS = H.draft ? [
+  { what: 'Changed the greeting', by: 'marco', area: 'instructions' },
+  { what: 'Added a rule: “Ask callers if they found us on Google”', by: 'marco', area: 'instructions' }
+] : [];
+function drawDraft() {
+  const n = DRAFTS.length;
+  $('#pubBtn').innerHTML = n ? `Publish ${n} change${n > 1 ? 's' : ''}` : 'Up to date';
+  $('#pubBtn').disabled = !n;
+  $('#nDraft').textContent = n || ''; $('#nDraft').classList.toggle('hide', !n);
+  const bar = $('#draftbar');
+  bar.classList.toggle('hide', !n);
+  if (n) {
+    const who = [...new Set(DRAFTS.map(x => person(x.by).first))].join(' and ');
+    bar.innerHTML = `${icon('edit')}<span style="flex:1"><b style="font-weight:600">${n} change${n > 1 ? 's' : ''} not live yet</b> from ${who}. ${NAME} keeps using the current version until someone publishes.</span><button class="btn btn-sm" onclick="showTab('history')">Review</button><button class="btn btn-sm btn-primary" onclick="openScrim('publish')">Publish</button>`;
+  }
+  $('#pbText').textContent = `${NAME} will start using these right away. You can go back to the previous version anytime in History.`;
+  $('#pbList').innerHTML = DRAFTS.map(x => `<li class="ok"><span class="box">${icon('check')}</span><span>${esc(x.what)} <span class="faint">(${person(x.by).first})</span></span></li>`).join('');
+}
+function addDraft(what) {
+  if (DRAFTS.some(x => x.what === what)) return;
+  DRAFTS.push({ what, by: 'sal', area: 'instructions' }); drawDraft();
+}
+drawDraft();
+$('#pbGo').onclick = () => {
+  VERSIONS.unshift({ v: VERSIONS.length + 1, who: 'sal', when: 'Just now', what: DRAFTS.map(x => x.what).join('; '), live: true });
+  VERSIONS.forEach((v, i) => v.live = i === 0);
+  DRAFTS.length = 0; H.draft = 0; closeScrim('publish'); drawDraft();
+  $('#presence').innerHTML = `${personAva(marco, 26)}Marco viewed today`;
+  toast(`Published. ${NAME} is using the changes now.`);
+  if (current === 'history' || current === 'instructions') showTab(current);
+};
+
+/* ---------- Data for tabs ---------- */
+const STATS = {
+  rosa: [['99', 'calls answered'], ['27', 'drop-offs booked'], ['4', 'passed to you'], ['1 ring', 'average pickup']],
+  penny: [['268', 'transactions sorted'], ['31', 'receipts matched'], ['3', 'asked you'], ['$0', 'left unsorted']],
+  max: [['14', 'invoices sent'], ['$3,240', 'collected'], ['2', 'still owed'], ['9 days', 'average to get paid']],
+  remy: [['39', 'review requests'], ['11', 'new reviews'], ['4.8', 'average stars'], ['100%', 'reviews answered']],
+  willa: [['12', 'invites sent'], ['5', 'clients back'], ['0', 'opt-outs'], ['42%', 'said yes']],
+  otto: [['0', 'orders'], ['–', 'not working yet'], ['–', ''], ['–', '']]
+};
+const RECENT = {
+  rosa: [['4:05 PM', 'phone', 'Dana asked about resoling boots. Booked Thursday at 10.'], ['3:58 PM', 'sms', 'Mrs. Patel asked for a Saturday rush. Asked Sal.'], ['2:15 PM', 'sms', 'Someone asked about a purse strap. Sal said $25; Rosa told them.'], ['11:02 AM', 'phone', "Ken asked if his loafers were ready. They're ready Friday."]],
+  penny: [['11:20 AM', 'bank', 'A $650 Venmo payment needs a category. Asked Sal.'], ['9:00 AM', 'book', 'Sorted 38 transactions from yesterday.'], ['Mon', 'receipt', 'Matched 6 receipts from your email.']],
+  max: [['9:05 AM', 'mail', "Janet Hughes hasn't paid after two reminders. Asked Ana."], ['Yesterday', 'card', 'Bob Lin paid $255 by card.'], ['Oct 31', 'mail', 'Sent reminder 2 to Janet Hughes.']]
+};
+const recentFor = id => RECENT[id] || (D.watch.lines || D.watch.replies || []).filter(l => l[2] || l[3]).map(l => ['This week', KIND_ICON[D.watch.kind], l[3] || l[2]]).slice(0, 4);
+const COMMENTS = { 1: [['marco', 'Should "starting at" apply to zippers too?', 'Oct 30'], ['sal', 'Yes, zippers vary a lot.', 'Oct 30']] };
+const APPROVALS = {
+  rosa: [['A rush job on a Saturday', 'sal'], ['A customer is upset', 'sal'], ['A price that isn\'t on the list', 'ana'], ['Anything else it isn\'t sure about', 'ana']],
+  penny: [['A payment over $500 it can\'t place', 'sal'], ['Something looks like a duplicate charge', 'sal'], ['Monthly report before it goes to Dana', 'sal']],
+  max: [['A third reminder', 'ana'], ['Someone disputes an invoice', 'sal'], ['A payment plan request', 'sal']]
+};
+const approvalsFor = id => APPROVALS[id] || [['Anything that costs money', 'sal'], ['Anything it isn\'t sure about', 'sal']];
+const VERSIONS = [
+  { v: 11, who: 'sal', when: 'Today, 9:14 AM', what: 'Added Sunday hours to what it knows', live: true },
+  { v: 10, who: 'marco', when: 'Oct 30', what: 'Softer wording when giving prices', live: false },
+  { v: 9, who: 'sal', when: 'Oct 22', what: 'Turned on WhatsApp', live: false },
+  { v: 8, who: 'sal', when: 'Oct 14', what: 'First version', live: false }
+];
+const GREETING_OLD = `${WS.name}, this is ${NAME}. How can I help?`;
+const GREETING_NEW = `Thanks for calling ${WS.name}, this is ${NAME}. What can I fix for you today?`;
+
+/* ---------- Tabs ---------- */
+let current = 'overview';
+function showTab(t) {
+  current = t;
+  $$('#tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.t === t)));
+  const P = $('#pane');
+  if (t === 'overview') {
+    const s = STATS[H.id] || [[String(H.week.reduce((a, b) => a + b, 0)), H.unit], ['–', ''], ['–', ''], ['–', '']];
+    const max = Math.max(1, ...H.week), days = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Today'];
+    P.innerHTML = `<p class="lead" style="max-width:60ch">${esc(H.today)}.</p>
+      <div class="stats">${s.map(([b, l]) => `<div class="stat"><b>${b}</b><span>${l}</span></div>`).join('')}</div>
+      <div class="edit-block"><h3>Last 7 days <span class="small faint" style="font-weight:400">${H.unit}</span></h3>
+        <div class="bars">${H.week.map((v, i) => `<div><span>${v || ''}</span><i style="height:${Math.max(4, v / max * 100)}%"></i>${days[i]}</div>`).join('')}</div></div>
+      <div class="edit-block"><h3>Recent work <a class="btn btn-ghost btn-sm" href="inbox.html">See conversations</a></h3>
+        <ul class="recent" style="list-style:none;padding:0;margin:0">${recentFor(H.id).map(([tm, ic, tx]) => `<li><span class="tm">${tm}</span>${icon(ic)}<span>${esc(tx)}</span></li>`).join('') || '<li><span></span><span></span><span class="faint">Nothing yet.</span></li>'}</ul></div>`;
+  }
+  if (t === 'instructions') {
+    const phone = D.steps.includes('phone') || D.steps.includes('voice');
+    const greetChanged = DRAFTS.some(x => x.what === 'Changed the greeting');
+    const rules = [...D.rules]; const newRule = DRAFTS.find(x => x.what.startsWith('Added a rule'));
+    P.innerHTML = `<div class="edit-block"><h3>${NAME}'s job</h3><p class="small muted">Describe it like you would to a new employee. ${NAME} reads this before every conversation.</p>
+        <textarea rows="3" data-edit="Changed ${NAME}'s job">${esc(D.prompt)}</textarea></div>
+      ${phone ? `<div class="edit-block"><h3>How ${NAME} answers the phone</h3>
+        <input class="txt" data-edit="Changed the greeting" value="${esc(greetChanged ? GREETING_NEW : GREETING_OLD)}">
+        ${greetChanged ? `<p class="changed">${personAva(marco, 20)}<span>Marco changed this 10 minutes ago. Was: <s>${esc(GREETING_OLD)}</s></span></p>` : ''}</div>` : ''}
+      <div class="edit-block"><h3>Tone</h3><div class="seg" id="tone"><button aria-pressed="true">Warm</button><button>Professional</button><button>Short and quick</button></div></div>
+      <div class="edit-block"><h3>House rules <span class="small faint" style="font-weight:400">Click the bubble to talk about a rule with your team</span></h3>
+        <div id="rules">${rules.map((r, i) => ruleHTML(r, i)).join('')}${newRule ? ruleHTML('Ask callers if they found us on Google', 99, true) : ''}</div>
+        <form class="field" id="addRule" style="margin-top:12px"><input id="ruleIn" placeholder="Add a rule in your own words" aria-label="New rule"><button class="btn btn-sm btn-ink">Add</button></form></div>`;
+  }
+  if (t === 'knowledge') {
+    P.innerHTML = `<div class="noticed">${icon('sparkle')}<p><b style="font-weight:600">${NAME} noticed:</b> 4 people asked this week whether you're open on Sundays. Add “We're closed Sundays, open Monday at 8” to what ${NAME} knows?</p><button class="btn btn-sm btn-primary" data-learn>Add it</button><button class="btn btn-sm btn-ghost" data-ignore>Ignore</button></div>
+      <div class="noticed">${icon('sparkle')}<p><b style="font-weight:600">${NAME} noticed:</b> 2 people asked about belt repair, but there's no price for it. What should ${NAME} say?</p><button class="btn btn-sm" data-ask>Tell ${NAME}</button></div>
+      <div class="edit-block"><h3>Where ${NAME} learns from <button class="btn btn-sm"><i data-icon="upload"></i> Add a file or note</button></h3>
+        <ul class="src" style="list-style:none;padding:0;margin:0">
+          <li><span class="ico">${icon('globe')}</span><span>morettishoerepair.com<span class="small faint" style="display:block">Read every Monday. Last read today at 6:00 AM.</span></span><button class="btn btn-sm" onclick="toast('Reading your website again. Done in about a minute.')">Read again</button></li>
+          <li><span class="ico">${icon('doc')}</span><span>Price list 2026.pdf<span class="small faint" style="display:block">Added by Sal, Oct 14</span></span><button class="btn btn-sm btn-ghost">Replace</button></li>
+          <li><span class="ico">${icon('edit')}</span><span>Note: "We don't dye suede"<span class="small faint" style="display:block">Added by Marco, Oct 30</span></span><button class="btn btn-sm btn-ghost">Edit</button></li>
+          <li><span class="ico">${icon('star')}</span><span>Your Google listing<span class="small faint" style="display:block">Hours, address and photos</span></span><span class="pill on">Connected</span></li>
+        </ul></div>`;
+  }
+  if (t === 'channels') {
+    P.innerHTML = `<div class="edit-block"><h3>Where ${NAME} works <a class="btn btn-ghost btn-sm" href="connections.html">All connections</a></h3>
+      <ul class="src" style="list-style:none;padding:0;margin:0">${D.steps.filter(s => !['you', 'rules', 'voice'].includes(s)).map(s => {
+        const [ic, label] = STEP_TOOLS[s];
+        return `<li><span class="ico">${icon(ic)}</span><span>${s === 'phone' ? (D.number || 'Phone line') : s === 'accounting' ? 'QuickBooks' : label}<span class="small faint" style="display:block">${STEP_ASK[s]}</span></span><button class="toggle" aria-checked="true" aria-label="${label}"></button></li>`;
+      }).join('')}</ul></div>
+      <div class="edit-block"><h3>How ${NAME} reaches people on your team</h3><p class="small muted">Set who decides what in the next tab. ${NAME} texts them; they can answer in their own words.</p></div>`;
+  }
+  if (t === 'approvals') {
+    P.innerHTML = `<div class="edit-block"><h3>Who decides</h3><p class="small muted">When ${NAME} needs a decision, it goes to this person by text. Anyone on the team can still answer from the "Needs you" list.</p>
+      <div class="appr head"><span>When this happens</span><span>Ask</span><span>How</span></div>
+      ${approvalsFor(H.id).map(([sit, who]) => `<div class="appr"><span>${esc(sit)}</span>
+        <select class="sel" aria-label="Who decides">${WS.team.filter(p => p.role !== 'viewer').map(p => `<option ${p.id === who ? 'selected' : ''}>${p.first}</option>`).join('')}<option>Whoever answers first</option></select>
+        <select class="sel" aria-label="How"><option>Text</option><option>Email</option><option>Call if urgent</option></select></div>`).join('')}
+      <button class="btn btn-sm" style="margin-top:12px"><i data-icon="plus"></i> Add a situation</button></div>
+      <div class="edit-block"><h3>If nobody answers</h3><div class="appr" style="border:0;grid-template-columns:1.4fr 2fr"><span>After 30 minutes</span><select class="sel" aria-label="If nobody answers"><option>Tell the customer someone will call back</option><option>Ask the next person</option><option>Call Sal</option></select></div></div>`;
+  }
+  if (t === 'history') {
+    P.innerHTML = `<div class="edit-block"><h3>Versions</h3><p class="small muted">Every change is saved. Go back to any version in one click.</p>
+      <ul class="ver" style="list-style:none;padding:0;margin:0">
+      ${DRAFTS.length ? `<li><span class="v">Draft</span><span><b style="font-weight:600">${DRAFTS.map(x => esc(x.what)).join('; ')}</b><span class="small faint" style="display:block">${[...new Set(DRAFTS.map(x => person(x.by).first))].join(' and ')}, not live yet</span></span><span class="row" style="gap:6px"><button class="btn btn-sm btn-ghost" id="discard">Discard</button><button class="btn btn-sm btn-primary" onclick="openScrim('publish')">Publish</button></span></li>` : ''}
+      ${VERSIONS.map(v => `<li><span class="v">v${v.v}</span><span>${esc(v.what)}<span class="small faint" style="display:flex;gap:6px;align-items:center;margin-top:2px">${personAva(person(v.who), 18)} ${person(v.who).first}, ${v.when}</span></span>${v.live ? '<span class="pill on">Live now</span>' : `<button class="btn btn-sm" data-restore="${v.v}">Go back to this</button>`}</li>`).join('')}
+      </ul></div>`;
+    const dc = $('#discard'); if (dc) dc.onclick = () => { DRAFTS.length = 0; drawDraft(); showTab('history'); toast('Draft discarded.'); };
+  }
+  hydrateIcons(P);
+}
+function ruleHTML(r, i, isNew = false) {
+  const c = COMMENTS[i] || [];
+  return `<div class="rule" data-i="${i}"><span>${esc(r)}${isNew ? '<span class="new">New, by Marco</span>' : ''}</span>
+    <button class="cbubble ${c.length ? 'has' : ''}" data-thread="${i}" aria-label="Comments">${icon('chat')}<span class="cn">${c.length || ''}</span></button>
+    <button class="toggle" aria-checked="true" aria-label="${esc(r)}" data-edit="Changed a house rule"></button></div>`;
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (b) showTab(b.dataset.t); });
+
+/* Editing anything creates a draft */
+document.addEventListener('input', e => { const x = e.target.closest('[data-edit]'); if (x) addDraft(x.dataset.edit); });
+document.addEventListener('click', e => {
+  const tg = e.target.closest('.toggle[data-edit]'); if (tg) addDraft(tg.dataset.edit);
+  const tone = e.target.closest('#tone button');
+  if (tone) { $$('#tone button').forEach(b => b.setAttribute('aria-pressed', String(b === tone))); addDraft(`Tone set to ${tone.textContent.toLowerCase()}`); }
+  const th = e.target.closest('[data-thread]');
+  if (th) {
+    const row = th.closest('.rule'); const open = row.nextElementSibling && row.nextElementSibling.classList.contains('thread');
+    if (open) { row.nextElementSibling.remove(); return; }
+    const c = COMMENTS[th.dataset.thread] || [];
+    const t = el(`<div class="thread">${c.map(([w, tx, wh]) => `<div class="comment">${personAva(person(w), 26)}<div><p class="who"><b>${person(w).first}</b> ${wh}</p><div class="body">${esc(tx)}</div></div></div>`).join('')}
+      <form class="reply"><input placeholder="Reply, or type @ to mention someone" aria-label="Reply"><button class="btn btn-sm btn-ink">Send</button></form></div>`);
+    row.after(t); t.querySelector('input').focus();
+    t.querySelector('form').onsubmit = ev => {
+      ev.preventDefault(); const v = t.querySelector('input').value.trim(); if (!v) return;
+      (COMMENTS[th.dataset.thread] = COMMENTS[th.dataset.thread] || []).push(['sal', v, 'Just now']);
+      t.querySelector('form').insertAdjacentHTML('beforebegin', `<div class="comment">${personAva(person('sal'), 26)}<div><p class="who"><b>Sal</b> Just now</p><div class="body"></div></div></div>`);
+      t.querySelectorAll('.comment .body')[t.querySelectorAll('.comment .body').length - 1].textContent = v;
+      t.querySelector('input').value = ''; th.classList.add('has'); th.querySelector('.cn').textContent = COMMENTS[th.dataset.thread].length;
+      if (/@marco/i.test(v)) toast('Marco will get a text about your comment.');
+    };
+  }
+  const lr = e.target.closest('[data-learn]'); if (lr) { const n = lr.closest('.noticed'); n.innerHTML = `${icon('check')}<p>Added. ${NAME} will tell people you're closed Sundays.</p>`; addDraft('Added Sunday hours to what it knows'); }
+  const ig = e.target.closest('[data-ignore]'); if (ig) ig.closest('.noticed').remove();
+  const rs = e.target.closest('[data-restore]'); if (rs) { VERSIONS.forEach(v => v.live = String(v.v) === rs.dataset.restore); showTab('history'); toast(`${NAME} is back on version ${rs.dataset.restore}.`); }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'addRule') return; e.preventDefault();
+  const v = $('#ruleIn').value.trim(); if (!v) return;
+  $('#rules').insertAdjacentHTML('beforeend', ruleHTML(v, 200 + $$('#rules .rule').length, false));
+  $('#ruleIn').value = ''; addDraft(`Added a rule: “${v}”`);
+});
+
+/* ---------- Try panel ---------- */
+const msgs = $('#msgs');
+function bub(cls, who, text) { const b = el(`<div class="sms ${cls}"><div class="who"></div><div></div></div>`); b.firstElementChild.textContent = who; b.lastElementChild.textContent = text; msgs.appendChild(b); msgs.scrollTop = msgs.scrollHeight; }
+function answer(q) {
+  const t = q.toLowerCase();
+  if (H.id === 'rosa') {
+    if (/sunday/.test(t)) return "We're closed Sundays. We're open Monday 8 to 6. Want me to book you a drop-off?";
+    if (/rush|today|saturday|tomorrow/.test(t)) return "Saturdays are usually full, so let me check with Sal and text you back within the hour.";
+    if (/price|how much|cost/.test(t)) return 'Full resoles start at $65 and heel tips at $18. Sal gives the exact price when he sees them.';
+    return `${DRAFTS.some(x => x.what === 'Changed the greeting') ? GREETING_NEW : GREETING_OLD} I can tell you our hours and prices, or book a drop-off.`;
+  }
+  if (/how much|price/.test(t)) return "I'll check that and get right back to you.";
+  return `Thanks! I'm ${NAME}, the ${D.role.toLowerCase()} at ${WS.name}. I'll take care of that, and I'll ask Sal if I'm not sure.`;
+}
+bub('other', 'Practice', H.status === 'draft' ? `${NAME} isn't finished yet, but you can still try it.` : `Ask ${NAME} anything a customer might. Your unpublished changes are included.`);
+const T_CHIPS = H.id === 'rosa' ? ['Are you open Sunday?', 'Can you do a rush job Saturday?', 'How much for heels?'] : ['What can you do?', 'How much does it cost?'];
+$('#tChips').innerHTML = T_CHIPS.map(c => `<button class="chip no-dot" type="button">${c}</button>`).join('');
+async function ask(q) { bub('me', 'You, as a customer', q); await wait(700); bub('agent', NAME, answer(q)); }
+$('#tChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) ask(c.textContent); });
+$('#tForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#tIn').value.trim(); if (v) { $('#tIn').value = ''; ask(v); } });
+
+/* ---------- Share ---------- */
+$('#shPeople').innerHTML = WS.team.filter(p => !p.helpers || p.helpers.includes(H.id)).map(p => `<li>${personAva(p, 30)}<span>${p.first}<span class="small faint" style="display:block;line-height:1.2">${ROLES[p.role].label}</span></span></li>`).join('');
+$('#shGo').onclick = () => { const w = $('#shWho').value.trim() || 'them'; closeScrim('share'); toast(`Invite sent to ${w}. They'll get a text with a link.`); };
+
+showTab(location.hash === '#instructions' ? 'instructions' : 'overview');
+</script>
+</body>
+</html>

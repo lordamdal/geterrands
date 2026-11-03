@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building your helper</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .build { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .9fr); gap: 56px; padding-top: 32px; }
+  .side-col { position: relative; }
+  .sticky { position: sticky; top: 92px; max-height: calc(100vh - 108px); overflow: auto; padding: 4px 6px 24px 4px; }
+  .progress { display: flex; align-items: center; gap: 12px; }
+  .bar { width: 180px; height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--navy); border-radius: 99px; transition: width .5s ease; }
+  .title-row h1 { font-size: clamp(32px, 3.6vw, 46px); }
+  .convo { padding: 30px 0 20px; }
+  .badge-note { margin-top: 16px; display: flex; gap: 10px; align-items: flex-start; font-size: 15.5px; color: var(--ink-2); padding: 0 6px; }
+  .badge-note .ic { width: 18px; height: 18px; margin-top: 3px; }
+  .done-call { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .rule-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
+  .consent { list-style: none; padding: 0; margin: 6px 0 0; }
+  .consent li { display: flex; gap: 10px; align-items: flex-start; padding: 5px 0; }
+  .consent .ic { width: 18px; height: 18px; margin-top: 4px; }
+  .consent.yes .ic { color: var(--ok); } .consent.no .ic { color: #B4483B; }
+  .banks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .banks .option { margin: 0 !important; }
+  .found { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; background: var(--ok-tint); color: #1F5E40; font-size: 16px; }
+  .found .ic { color: var(--ok); }
+  .crit .chip { min-height: 38px; font-size: 14.5px; }
+  @media (max-width: 1000px) {
+    .build { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .side-col { order: -1; }
+    .sticky { position: static; max-height: none; overflow: visible; }
+    .topbar .hide-m { display: none; }
+  }
+  @media (max-width: 700px) {
+    .bar { width: 80px; } #progText { display: none; }
+    .msg { gap: 10px; }
+    .act-head, .act-body, .act-foot { padding-left: 14px; padding-right: 14px; }
+    .option .rec { display: none; }
+    .banks { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar solid">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <div class="progress" aria-label="Setup progress"><div class="bar"><i id="barFill"></i></div><span class="small muted" id="progText"></span></div>
+    <nav>
+      <button class="btn btn-ghost btn-sm hide-m" onclick="openScrim('help')"><i data-icon="family"></i> Get help</button>
+      <button class="btn btn-sm" onclick="openScrim('later')">Finish later</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap build">
+  <section aria-label="Conversation with the builder">
+    <div class="title-row"><h1 id="pageTitle"></h1></div>
+    <div class="convo" id="convo" aria-live="polite"></div>
+    <form class="composer" id="composer">
+      <div class="field">
+        <button type="button" class="icon-btn" aria-label="Talk instead of typing"><i data-icon="mic"></i></button>
+        <input id="say" placeholder="Ask anything, or tell me what to change" autocomplete="off">
+        <button class="round-go" aria-label="Send"><i data-icon="up"></i></button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="side-col" aria-label="Your helper">
+    <div class="sticky">
+      <div class="badge" id="badge"></div>
+      <p class="badge-note"><i data-icon="shield"></i><span>Nothing reaches real customers until you press "Put to work" at the end.</span></p>
+    </div>
+  </aside>
+</main>
+
+<!-- Modals -->
+<div class="scrim" id="consent" role="dialog" aria-modal="true" aria-labelledby="csT">
+  <div class="modal">
+    <div class="modal-head"><h3 id="csT"></h3></div>
+    <div class="modal-body" id="csBody"></div>
+    <div class="modal-foot"><button class="btn" data-close="consent">Cancel</button><button class="btn btn-primary" id="csAllow">Allow</button></div>
+  </div>
+</div>
+<div class="scrim" id="rename" role="dialog" aria-modal="true" aria-labelledby="rnT">
+  <div class="modal">
+    <div class="modal-head"><h3 id="rnT">What should we call your helper?</h3></div>
+    <div class="modal-body"><p class="muted">Customers see or hear this name.</p><div class="field"><input id="newName" aria-label="Helper name"></div></div>
+    <div class="modal-foot"><button class="btn" data-close="rename">Cancel</button><button class="btn btn-primary" id="saveName">Save name</button></div>
+  </div>
+</div>
+<div class="scrim" id="later" role="dialog" aria-modal="true" aria-labelledby="ltT">
+  <div class="modal">
+    <div class="modal-head"><h3 id="ltT">Saved where you left off</h3></div>
+    <div class="modal-body"><p class="muted">Everything you've done is kept. Want a reminder?</p>
+      <div><button class="option" aria-checked="true"><span class="radio"></span><span><strong>Text me tomorrow at 10am</strong><span class="d">"Your helper is almost ready. Tap to finish."</span></span></button>
+      <button class="option" aria-checked="false"><span class="radio"></span><span><strong>No reminder</strong></span></button></div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close="later">Keep going</button><a class="btn btn-primary" href="index.html">Save and leave</a></div>
+  </div>
+</div>
+<div class="scrim" id="help" role="dialog" aria-modal="true" aria-labelledby="hpT">
+  <div class="modal">
+    <div class="modal-head"><h3 id="hpT">Bring someone in</h3></div>
+    <div class="modal-body"><p class="muted">They'll see this same screen and can answer questions with you. They can't see your email or money.</p><div class="field"><input value="(216) 555-0177" aria-label="Their phone number"></div></div>
+    <div class="modal-foot"><button class="btn" data-close="help">Not now</button><button class="btn btn-primary" data-close="help">Text them the link</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+/* ---------- Which helper are we building? ---------- */
+const qs = new URLSearchParams(location.search);
+const typed = qs.get('p') || STORE.get('prompt', '');
+const D = demoById(qs.get('d')) || matchDemo(typed);
+let NAME = D.name;
+const N = () => NAME;
+const slug = D.biz.toLowerCase().replace(/[^a-z]+/g, '');
+const site = `${slug}.com`;
+const ownerEmail = `${D.owner.toLowerCase()}@${slug}.com`;
+const STEPS = D.steps;
+const TOTAL = STEPS.length + 1;
+let doneCount = 0;
+
+/* ---------- Badge ---------- */
+const ROWS = [['job', 'Job'], ['knows', 'Knows'], ['phone', 'Phone'], ['voice', 'Voice'], ['uses', 'Uses'], ['talks', 'Talks on'], ['reports', 'Reaches you'], ['rules', 'House rules']];
+const showRow = { knows: STEPS.includes('website'), phone: STEPS.includes('phone'), voice: STEPS.includes('voice'),
+  talks: STEPS.some(s => ['phone', 'channels', 'email', 'social', 'reviews', 'shop'].includes(s)) };
+const EMPTY = { job: 'Reading your request…', knows: 'Waiting for your website', phone: 'No number yet', voice: 'Not picked', uses: 'Nothing connected yet', talks: 'Nowhere yet', reports: 'Not set', rules: 'None yet' };
+function drawBadge() {
+  $('#badge').innerHTML = `<div class="badge-cover"><img src="${D.photo}" alt="${esc(D.biz)}"></div><div class="badge-top">${avatarHTML(D, 'lg')}<div class="who"><strong data-name>${N()}</strong><span class="role">${D.role}, ${D.biz}</span></div>
+      <button class="icon-btn" onclick="openScrim('rename')" aria-label="Rename" title="Rename"><i data-icon="edit"></i></button></div>` +
+    ROWS.filter(([k]) => showRow[k] !== false).map(([k, label]) => `<div class="badge-row" id="row-${k}"><span class="k">${label}</span><span class="v empty">${EMPTY[k]}</span></div>`).join('');
+  hydrateIcons($('#badge'));
+}
+function setRow(key, html) {
+  const row = $('#row-' + key); if (!row) return;
+  const v = row.querySelector('.v'); v.classList.remove('empty'); v.innerHTML = html; hydrateIcons(v);
+  row.classList.remove('fresh'); void row.offsetWidth; row.classList.add('fresh');
+}
+function addTag(key, text, ic) {
+  const row = $('#row-' + key); if (!row) return;
+  const v = row.querySelector('.v');
+  if (v.classList.contains('empty')) { v.classList.remove('empty'); v.innerHTML = ''; }
+  v.insertAdjacentHTML('beforeend', `<span class="tag">${ic ? icon(ic) : ''}${esc(text)}</span>`);
+  row.classList.remove('fresh'); void row.offsetWidth; row.classList.add('fresh');
+}
+function progress() {
+  $('#barFill').style.width = `${Math.round(doneCount / TOTAL * 100)}%`;
+  $('#progText').textContent = `${doneCount} of ${TOTAL} done`;
+}
+
+/* ---------- Conversation primitives ---------- */
+const convo = $('#convo');
+function scrollEnd(node) { node.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+function userSays(text) {
+  const m = el(`<div class="msg user"><div class="avatar user">${D.owner[0]}</div><div class="msg-body"><div class="msg-who">You</div><div class="bubble"></div></div></div>`);
+  m.querySelector('.bubble').textContent = text; convo.appendChild(m); scrollEnd(m);
+}
+async function say(html, delay = 750) {
+  const m = el(`<div class="msg builder"><div class="avatar builder">e</div><div class="msg-body"><div class="msg-who">Errand</div><div class="typing"><i></i><i></i><i></i></div></div></div>`);
+  convo.appendChild(m); scrollEnd(m);
+  await wait(delay);
+  const body = m.querySelector('.msg-body');
+  body.querySelector('.typing').remove();
+  body.insertAdjacentHTML('beforeend', html);
+  hydrateIcons(body); scrollEnd(m);
+  return body;
+}
+const optHTML = (o, i) => `<button class="option" aria-checked="${i === 0}" data-v="${o.v}"><span class="radio"></span><span><strong>${o.t}</strong>${o.d ? `<span class="d">${o.d}</span>` : ''}</span>${o.rec ? `<span class="pill blue rec">${o.rec}</span>` : ''}</button>`;
+let cardN = 0;
+/* One question as a card. Resolves with { v, card } when the main button is pressed. */
+function ask({ ic, title, why = '', options = [], body = '', cta = 'Continue', alt = null, intro = '' }) {
+  return new Promise(async resolve => {
+    const id = 'c' + (++cardN);
+    await say(`${intro ? `<p>${intro}</p>` : ''}<div class="act" id="${id}">
+      ${title ? `<div class="act-head">${icon(ic || 'sparkle')}<h3>${title}</h3></div>` : ''}
+      <div class="act-body">${why ? `<p class="why">${why}</p>` : ''}${options.length ? `<div class="opts">${options.map(optHTML).join('')}</div>` : ''}${body}</div>
+      <div class="act-foot"><button class="btn btn-primary" data-main>${cta}</button>${alt ? `<button class="btn btn-ghost" data-alt>${alt}</button>` : ''}</div></div>`);
+    const card = document.getElementById(id);
+    const pick = () => (card.querySelector('.option[aria-checked="true"]') || {}).dataset?.v;
+    card.querySelector('[data-main]').onclick = () => resolve({ v: pick(), card, alt: false });
+    const a = card.querySelector('[data-alt]'); if (a) a.onclick = () => resolve({ v: pick(), card, alt: true });
+  });
+}
+function finish(card) { card.classList.add('done'); }
+function consent({ title, will, wont, note }) {
+  return new Promise(resolve => {
+    $('#csT').textContent = title;
+    $('#csBody').innerHTML = `<div><p class="label">${esc(N())} will</p><ul class="consent yes">${will.map(w => `<li>${icon('check')}<span>${w}</span></li>`).join('')}</ul></div>
+      <div><p class="label">${esc(N())} won't</p><ul class="consent no">${wont.map(w => `<li>${icon('x')}<span>${w}</span></li>`).join('')}</ul></div>
+      <p class="small faint">${note || 'You can turn this off anytime.'}</p>`;
+    openScrim('consent');
+    $('#csAllow').textContent = 'Allow';
+    $('#csAllow').onclick = async () => { $('#csAllow').textContent = 'Connecting…'; await wait(800); closeScrim('consent'); resolve(true); };
+  });
+}
+async function streamList(lines, card) {
+  const list = el('<ul class="checklist"></ul>');
+  (card ? card.querySelector('.act-body') : (await say(''))).appendChild(list);
+  for (const t of lines) {
+    const li = el(`<li class="work"><span class="box"></span><span></span></li>`); li.lastElementChild.textContent = t;
+    list.appendChild(li); scrollEnd(li); await wait(620);
+    li.className = 'ok'; li.querySelector('.box').innerHTML = icon('check');
+  }
+}
+function tick(step) { doneCount++; progress(); const li = $('#plan-' + step); if (li) { li.className = 'ok'; li.querySelector('.box').innerHTML = icon('check'); } }
+function working(step) { const li = $('#plan-' + step); if (li) li.className = 'work'; }
+document.addEventListener('click', e => {
+  const o = e.target.closest('.option');
+  if (o && o.parentElement) { $$('.option', o.parentElement).forEach(x => x.setAttribute('aria-checked', 'false')); o.setAttribute('aria-checked', 'true'); }
+  const s = e.target.closest('.seg button');
+  if (s) { $$('button', s.parentElement).forEach(x => x.setAttribute('aria-pressed', 'false')); s.setAttribute('aria-pressed', 'true'); }
+  const c = e.target.closest('.act .chip:not(.static)');
+  if (c) c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  const v = e.target.closest('.voice');
+  if (v) {
+    $$('.voice', v.parentElement).forEach(x => { x.setAttribute('aria-checked', 'false'); x.classList.remove('playing'); });
+    v.setAttribute('aria-checked', 'true'); v.classList.add('playing');
+    setTimeout(() => v.classList.remove('playing'), 2200);
+  }
+});
+
+/* ---------- Step library ---------- */
+const PLAN = {
+  website: 'Learn your business from your website', phone: () => `Get ${N()} a phone line`, voice: () => `Pick how ${N()} sounds`,
+  calendar: 'Connect your calendar', email: 'Connect email', accounting: 'Connect your books', bank: 'Connect your bank, read only',
+  payments: 'Set up card payments', social: 'Connect Instagram and Facebook', contacts: () => `Choose who ${N()} contacts`,
+  reviews: 'Connect your Google listing', shop: 'Connect your shop', channels: 'Add more places customers can reach you',
+  you: () => `Decide how ${N()} reaches you`, rules: 'Agree on house rules'
+};
+const planText = s => typeof PLAN[s] === 'function' ? PLAN[s]() : PLAN[s];
+
+const LIB = {
+  async website() {
+    const r = await ask({ ic: 'globe', title: 'Let me read your website', why: `That's how ${N()} learns your hours, prices and services without you typing them.`,
+      body: `<div class="field"><input value="${site}" aria-label="Your website"></div>`, cta: 'Read my website', alt: "I don't have a website" });
+    if (r.alt) userSays("I don't have a website.");
+    r.card.querySelector('.act-foot').remove(); r.card.querySelector('.act-body').innerHTML = '';
+    const lines = [r.alt ? 'Listening to what you told me' : `Opening ${site}`, ...(D.learn && D.learn.length ? D.learn : ['Found your hours', 'Found your services and prices', 'Found your address and service area'])];
+    await streamList(lines, r.card);
+    ['Hours', 'Prices', 'Services', 'Address'].slice(0, Math.max(2, lines.length - 1)).forEach(t => addTag('knows', t));
+    const c = await ask({ intro: 'One quick check so nothing is out of date:', body: `<div class="yesno" style="border:0;padding:0"><span>Is everything I found still right?</span></div>`, cta: "Yes, that's right", alt: 'Some of it changed' });
+    finish(c.card);
+    if (c.alt) await say(`<p>No problem. Tell me what changed in the box at the bottom whenever you like, and I'll update ${N()}.</p>`, 500);
+  },
+
+  async phone() {
+    const r = await ask({ ic: 'phone', title: `Pick how people reach ${N()} by phone`, intro: `${N()} needs a phone line.`,
+      options: [
+        { v: 'new', t: 'Give a new local number', d: `${D.number || '(555) 555-0100'}, local to you. Put it on your sign and website.`, rec: 'Easiest' },
+        { v: 'fwd', t: 'Use my business number', d: "Customers keep the number they know. I'll walk you through one call to your phone company." }
+      ], cta: 'Use this' });
+    finish(r.card);
+    const num = r.v === 'fwd' ? 'Your business number' : (D.number || '(555) 555-0100');
+    setRow('phone', `<span class="badge-phone num">${num}</span>`);
+    addTag('talks', 'Calls', 'phone'); addTag('talks', 'Texts', 'sms');
+    await say(`<p>Done. <strong>${num}</strong> now reaches ${N()}, for calls and texts.</p>
+      <p class="small muted">I also started the business-texting registration phone carriers require, so ${N()}'s texts don't get blocked. That can take a few days. Calls work right away.</p>`, 600);
+  },
+
+  async voice() {
+    const r = await ask({ ic: 'mic', title: `How should ${N()} sound?`, why: 'Tap one to hear it.',
+      body: `<div class="voices">${['Warm', 'Calm', 'Bright'].map((v, i) => `<button class="voice" aria-checked="${i === 0}" data-v="${v}"><strong>${v}</strong><div class="wave">${'<i></i>'.repeat(18)}</div><span class="small muted">${['Friendly and unhurried.', 'Low and steady.', 'Upbeat and quick.'][i]}</span></button>`).join('')}</div>
+        <div class="yesno" style="border:0;padding-bottom:0"><span>Answer in the caller's language</span><button class="toggle" aria-checked="true" aria-label="Answer in the caller's language"></button></div>`,
+      cta: 'Use this voice' });
+    const v = r.card.querySelector('.voice[aria-checked="true"]').dataset.v;
+    finish(r.card); setRow('voice', `${v}, speaks the caller's language`);
+  },
+
+  async calendar() {
+    const r = await ask({ ic: 'calendar', title: 'Where do you keep appointments?', intro: `To book for you, ${N()} needs to see when you're free.`,
+      options: [{ v: 'g', t: 'My Google Calendar', d: 'One tap, using your Google account.', rec: 'Easiest' }, { v: 'o', t: 'My Outlook calendar' }, { v: 's', t: "I don't use one. Keep a simple book for me.", d: `${N()} keeps the list and texts you each morning.` }],
+      cta: 'Connect' });
+    if (r.v !== 's') await consent({ title: `${N()} would like to use your ${r.v === 'g' ? 'Google' : 'Outlook'} Calendar`, will: ["See when you're busy, so nothing is double-booked", 'Add new appointments'], wont: ['Read what your other appointments are about', 'Change or delete anything you made'] });
+    finish(r.card); addTag('uses', r.v === 'o' ? 'Outlook Calendar' : r.v === 'g' ? 'Google Calendar' : 'Simple calendar', 'calendar');
+  },
+
+  async email() {
+    const own = `${N().toLowerCase()}@${slug}.errand.mail`;
+    const r = await ask({ ic: 'mail', title: `Which email should ${N()} use?`,
+      options: [{ v: 'g', t: 'Connect my business email', d: `${ownerEmail}, through Google or Outlook.`, rec: 'Recommended' }, { v: 'own', t: `Give ${N()} an address of its own`, d: `${own}. Ready instantly.` }],
+      cta: 'Continue' });
+    if (r.v === 'g') await consent({ title: `${N()} would like to use ${ownerEmail}`, will: ['Read emails about your business', 'Send emails that follow your house rules'], wont: ['Delete anything', 'Change your settings or password'] });
+    finish(r.card);
+    addTag('uses', r.v === 'g' ? ownerEmail : own, 'mail'); addTag('talks', 'Email', 'mail');
+  },
+
+  async accounting() {
+    const r = await ask({ ic: 'book', title: 'Where do you keep your books?',
+      options: [{ v: 'QuickBooks', t: 'QuickBooks', d: 'Most small businesses use it.', rec: 'Most common' }, { v: 'Xero', t: 'Xero' }, { v: 'Spreadsheet', t: 'A spreadsheet', d: 'Upload it, or link a Google Sheet.' }],
+      cta: 'Connect' });
+    if (r.v !== 'Spreadsheet') await consent({ title: `${N()} would like to use your ${r.v}`, will: ['Read customers, invoices and expenses', 'Add and sort entries by your rules'], wont: ['Delete records', 'Pay bills or move money'] });
+    finish(r.card); addTag('uses', r.v, 'book');
+    await streamList([`Found ${D.id === 'invoices' ? '12 open invoices worth $6,840' : D.id === 'quotes' ? 'your price list and 40 past quotes' : '1,204 entries from this year'}`, 'Learned your categories']);
+  },
+
+  async bank() {
+    const r = await ask({ ic: 'bank', title: 'Connect your business bank account', why: `${N()} can only look. It can never move money.`,
+      body: `<div class="banks opts">${['Chase', 'Bank of America', 'Wells Fargo', 'My local credit union'].map((b, i) => `<button class="option" aria-checked="${i === 0}" data-v="${b}"><span class="radio"></span><span><strong>${b}</strong></span></button>`).join('')}</div>`,
+      cta: 'Connect securely' });
+    await consent({ title: `Connect ${r.v}, read only`, will: ['See your balance and transactions'], wont: ['Move money or pay anyone', 'See your bank password; you sign in on your bank\'s own page'], note: 'This uses a secure bank connection. You can disconnect anytime.' });
+    finish(r.card); addTag('uses', `${r.v}, read only`, 'bank');
+    await streamList(['Reading the last 90 days', 'Found 412 transactions', 'Spotted your regular bills: rent, utilities, payroll']);
+  },
+
+  async payments() {
+    const r = await ask({ ic: 'card', title: 'How do customers pay you by card?',
+      options: [{ v: 'Stripe', t: 'Stripe', rec: 'Most common' }, { v: 'Square', t: 'Square' }, { v: 'PayPal', t: 'PayPal' }], cta: 'Connect',
+      why: `${N()} will text and email pay-by-card links. Money goes straight to your account.` });
+    await consent({ title: `${N()} would like to use your ${r.v} account`, will: ['Create payment links for invoices', 'See when someone has paid'], wont: ['See card numbers', 'Refund anyone without asking you'] });
+    finish(r.card); addTag('uses', r.v, 'card');
+  },
+
+  async social() {
+    const r = await ask({ ic: 'heart', title: 'Connect your Instagram and Facebook', why: "You'll sign in once on Facebook's own page.", body: `<div class="row"><span class="tag">${icon('heart')}@${D.watch.handle || slug}</span></div>`, cta: 'Sign in with Facebook', alt: 'Do this later' });
+    if (!r.alt) await consent({ title: `${N()} would like to use your pages`, will: ['Draft posts from your photos', 'Publish after you say OK'], wont: ['Post anything without your OK', 'Delete posts or comments'] });
+    finish(r.card); if (!r.alt) { addTag('uses', 'Instagram and Facebook', 'heart'); addTag('talks', 'Instagram', 'heart'); }
+  },
+
+  async contacts() {
+    const mode = D.contacts || 'list';
+    if (mode === 'calls') {
+      const r = await ask({ ic: 'users', title: `Who should ${N()} call?`, options: [
+        { v: 'find', t: `Let ${N()} find businesses near me`, d: 'Offices within 5 miles that match your best customers.', rec: 'Easiest' },
+        { v: 'up', t: 'Upload my own list', d: 'A spreadsheet of business names and numbers.' }], cta: 'Continue' });
+      finish(r.card);
+      await streamList(['Found 214 offices within 5 miles', 'Removed 31 numbers on the Do Not Call list', 'Kept business numbers only, no homes']);
+      addTag('uses', '183 businesses to call', 'users');
+      return;
+    }
+    if (mode === 'find') {
+      const r = await ask({ ic: 'search', title: `What kind of businesses should ${N()} look for?`, why: 'I picked these from your website. Tap to change.',
+        body: `<div class="row crit"><button class="chip" aria-pressed="true">Restaurants</button><button class="chip" aria-pressed="true">Within 15 miles</button><button class="chip" aria-pressed="true">Website older than 2019</button><button class="chip" aria-pressed="false">No online ordering</button><button class="chip" aria-pressed="false">Cafes and bakeries</button></div>`, cta: 'Find them' });
+      finish(r.card);
+      await streamList(['Found 96 restaurants that match', 'Checked each website', 'Picked the 40 best fits to start']);
+      addTag('uses', '40 good-fit businesses', 'search');
+      return;
+    }
+    const r = await ask({ ic: 'users', title: `Who should ${N()} reach out to?`, options: [
+      { v: 'sq', t: 'My customers from my register', d: '412 customers from Square and QuickBooks.', rec: 'Recommended' },
+      { v: 'up', t: 'Upload a spreadsheet' },
+      { v: 'web', t: 'People who signed up on my website', d: '1,248 newsletter sign-ups.' }], cta: 'Use this list' });
+    finish(r.card);
+    await streamList(['Checked who agreed to hear from you', `${r.v === 'web' ? '1,248' : '356'} people can get messages`, 'Everyone else stays off the list']);
+    await say(`<p class="small muted">${N()} only contacts people who agreed to hear from you, and every message has an easy way to opt out.</p>`, 400);
+    addTag('uses', 'Customer list', 'users');
+  },
+
+  async reviews() {
+    const r = await ask({ ic: 'star', title: 'Connect your Google business listing', why: `So ${N()} can answer reviews and keep your hours and posts up to date.`, body: `<div class="row"><span class="tag">${icon('pin')}${D.biz} on Google</span></div>`, cta: 'Sign in with Google' });
+    await consent({ title: `${N()} would like to manage your Google listing`, will: ['Reply to reviews in your voice', 'Update hours and post updates'], wont: ['Delete any review', 'Change your business name or address'] });
+    finish(r.card); addTag('uses', 'Google listing', 'star'); addTag('talks', 'Google', 'star');
+  },
+
+  async shop() {
+    const r = await ask({ ic: 'store', title: 'Where do you sell?', options: [{ v: 'Shopify', t: 'Shopify', rec: 'Most common' }, { v: 'Square', t: 'Square' }, { v: 'WooCommerce', t: 'WooCommerce' }], cta: 'Connect' });
+    await consent({ title: `${N()} would like to use your ${r.v} store`, will: ['Look up orders, tracking and stock', 'Follow your return policy'], wont: ['Change prices', 'Refund more than your rules allow'] });
+    finish(r.card); addTag('uses', r.v, 'store');
+  },
+
+  async channels() {
+    const r = await ask({ ic: 'chat', title: `More places for ${N()} to talk to customers`, why: 'Pick any, or skip. You can add these later.',
+      body: `<div class="row"><button class="chip" aria-pressed="true" data-v="wa">${icon('whatsapp')} WhatsApp</button><button class="chip" aria-pressed="true" data-v="web">${icon('chat')} Chat on my website</button><button class="chip" aria-pressed="false" data-v="ig">${icon('heart')} Instagram</button><button class="chip" aria-pressed="false" data-v="tg">${icon('telegram')} Telegram</button></div>`,
+      cta: 'Add these', alt: 'Skip for now' });
+    const on = r.alt ? [] : $$('.chip[aria-pressed="true"]', r.card).map(c => c.dataset.v);
+    finish(r.card);
+    const L = { wa: ['WhatsApp', 'whatsapp'], web: ['Website', 'chat'], ig: ['Instagram', 'heart'], tg: ['Telegram', 'telegram'] };
+    on.forEach(k => addTag('talks', L[k][0], L[k][1]));
+    if (on.includes('web')) await say(`<p class="small muted">For website chat, I'll send whoever runs your website two lines to paste in. ${N()} works everywhere else right away.</p>`, 500);
+  },
+
+  async you() {
+    const r = await ask({ ic: 'bell', title: `When ${N()} needs a decision, how should it reach you?`,
+      options: [{ v: 'sms', t: 'Text my cell phone', d: 'Reply yes, no, or anything in your own words.', rec: 'Fastest' }, { v: 'mail', t: 'Email me' }, { v: 'call', t: 'Call me', d: "Only for things that can't wait." }],
+      body: `<div class="field"><input id="cell" value="(555) 555-0192" aria-label="Your cell number"></div><p class="why">You can also text or email ${N()} anytime to give instructions. It will know it's you.</p>`, cta: 'Save' });
+    finish(r.card);
+    setRow('reports', r.v === 'sms' ? `Texts ${D.owner}` : r.v === 'mail' ? `Emails ${D.owner}` : `Calls ${D.owner}`);
+  },
+
+  async rules() {
+    const r = await ask({ ic: 'sliders', title: `How ${N()} should behave`, why: 'Turn anything off, or add a rule in your own words.',
+      body: `<div id="ruleList">${D.rules.map(x => `<div class="rule-row"><span>${esc(x)}</span><button class="toggle" aria-checked="true" aria-label="${esc(x)}"></button></div>`).join('')}</div>
+        <form class="field" id="addRule"><input id="ruleIn" placeholder='For example: "Be extra polite to regulars"' aria-label="New rule"><button class="btn btn-sm btn-ink">Add</button></form>`,
+      cta: 'Looks right' }).then(x => x);
+    finish(r.card);
+    setRow('rules', `${$$('#ruleList .toggle[aria-checked="true"]').length} rules, in your words`);
+  }
+};
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'addRule') return; e.preventDefault();
+  const v = $('#ruleIn').value.trim(); if (!v) return;
+  const row = el(`<div class="rule-row"><span></span><button class="toggle" aria-checked="true" aria-label="Rule"></button></div>`);
+  row.querySelector('span').textContent = v; $('#ruleList').appendChild(row); $('#ruleIn').value = '';
+});
+
+/* ---------- Run ---------- */
+async function start() {
+  document.title = `Building ${N()}`;
+  $('#pageTitle').innerHTML = `Setting up <em data-name>${N()}</em>`;
+  drawBadge(); progress();
+  const prompt = typed || D.prompt;
+  userSays(prompt);
+  const custom = typed && typed !== D.prompt;
+  await say(`<p>Got it. I'll set up <strong data-name>${N()}</strong>, a ${D.role.toLowerCase()} for ${D.biz}. ${D.summary}${custom ? '' : ''}</p>
+    <p>Here's the plan. I'll do most of it myself and only ask what I can't figure out. ${D.setupTime}.</p>
+    <div class="panel" style="padding:6px 20px"><ul class="checklist">${STEPS.map(s => `<li id="plan-${s}" class="pending"><span class="box"></span>${planText(s)}</li>`).join('')}
+      <li id="plan-try" class="pending"><span class="box"></span>Try ${N()} before anyone else does</li></ul></div>`, 1000);
+  setRow('job', D.summary);
+  for (const s of STEPS) { working(s); await LIB[s](); tick(s); await wait(250); }
+  working('try');
+  $('#badge').querySelector('.badge-top').insertAdjacentHTML('beforeend', '<span class="pill blue">Ready to try</span>');
+  await say(`<p>${N()} is ready to try. Nothing reaches real customers yet.</p>
+    <div class="panel hard done-call">
+      <div><p class="label">Practice run</p><p class="h3-serif" style="margin-top:4px">See ${N()} handle a real ${D.watch.kind === 'ledger' ? 'week of transactions' : D.watch.kind === 'post' ? 'photo' : D.watch.kind === 'email' ? 'email' : D.watch.kind === 'call' ? 'call' : 'conversation'}</p></div>
+      <a class="btn btn-primary btn-lg" href="test.html?d=${D.id}"><span>Try ${N()}</span><i data-icon="right"></i></a>
+    </div>`, 900);
+}
+
+/* Free-form talk with the builder */
+$('#composer').addEventListener('submit', async e => {
+  e.preventDefault();
+  const v = $('#say').value.trim(); if (!v) return;
+  $('#say').value = ''; userSays(v);
+  await say(`<p>Noted. I added that to ${N()}'s house rules: <strong>“${esc(v)}”</strong></p>`, 700);
+  addTag('rules', v.length > 28 ? v.slice(0, 28) + '…' : v);
+});
+$('#saveName').onclick = () => {
+  NAME = $('#newName').value.trim() || D.name; STORE.set('name:' + D.id, NAME);
+  $$('[data-name]').forEach(n => n.textContent = NAME); closeScrim('rename');
+};
+document.addEventListener('DOMContentLoaded', () => { NAME = STORE.get('name:' + D.id, D.name); $('#newName').value = NAME; start(); });
+</script>
+</body>
+</html>

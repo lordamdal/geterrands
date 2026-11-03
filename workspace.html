@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moretti Shoe Repair | Errand</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wgrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 36px; align-items: start; }
+  .hello p { margin-top: 8px; font-size: 19px; color: var(--ink-2); }
+  .needs-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+  .ncard { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: inset 3px 0 0 var(--marigold), var(--shadow-sm); }
+  .ncard .top { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-3); }
+  .ncard .top b { color: var(--ink); font-weight: 600; }
+  .ncard h3 { font-size: 16.5px; line-height: 1.35; }
+  .ncard .foot { margin-top: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ncard .assignee { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; color: var(--ink-2); margin-left: auto; }
+  .sechead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 40px; }
+  .sechead h2 { font-size: 26px; }
+  .filters-s { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filters-s button { border: 1px solid var(--line-2); background: #fff; border-radius: 99px; min-height: 38px; padding: 0 14px; font-size: 15px; cursor: pointer; }
+  .filters-s button span { color: var(--ink-3); margin-left: 4px; }
+  .filters-s button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .filters-s button[aria-pressed="true"] span { color: rgba(255,255,255,.65); }
+  .htable { margin-top: 14px; background: #fff; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .hrow { display: grid; grid-template-columns: minmax(200px, 1.3fr) 120px minmax(180px, 1.6fr) 140px 130px 92px; gap: 16px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); text-decoration: none; }
+  .hrow.head { border-top: 0; font-size: 13.5px; color: var(--ink-3); padding-top: 12px; padding-bottom: 10px; background: #FBFBFA; }
+  a.hrow:hover { background: #FBFBFA; }
+  .hrow .who { display: flex; gap: 12px; align-items: center; }
+  .hrow .who strong { font-weight: 600; display: block; }
+  .hrow .who .small { line-height: 1.2; }
+  .hrow .wk { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-2); }
+  .hrow .chg { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-2); }
+  .hrow .needs { font-size: 14px; }
+  .hrow .needs b { background: var(--marigold); color: var(--ink); border-radius: 99px; padding: 2px 9px; font-weight: 700; font-size: 13px; }
+  .feed-s { list-style: none; margin: 0; padding: 0; }
+  .feed-s li { display: flex; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; line-height: 1.4; }
+  .feed-s li:last-child { border-bottom: 0; }
+  .feed-s b { font-weight: 600; }
+  .feed-s .t { display: block; font-size: 13px; color: var(--ink-3); }
+  .people li { display: flex; gap: 10px; align-items: center; padding: 8px 0; font-size: 15.5px; }
+  .people .on { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-left: auto; }
+  .people .off { width: 8px; height: 8px; border-radius: 50%; background: #C4C8C5; margin-left: auto; }
+  @media (max-width: 1560px) {
+    .hrow { grid-template-columns: minmax(170px, 1.2fr) 110px minmax(150px, 1.5fr) 140px 110px; }
+    .hrow > :nth-child(6) { display: none; }
+  }
+  @media (max-width: 1250px) { .wgrid { grid-template-columns: minmax(0, 1fr); } .needs-row { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 1000px) {
+    .hrow.head { display: none; }
+    .hrow { grid-template-columns: 1fr auto; gap: 8px 12px; }
+    .hrow > :nth-child(3), .hrow > :nth-child(4), .hrow > :nth-child(5) { grid-column: 1 / -1; }
+    .hrow > :nth-child(6) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="content">
+  <div class="wgrid">
+    <div>
+      <div class="hello"><h1 id="hello"></h1><p id="sum"></p></div>
+
+      <div class="sechead" style="margin-top:28px"><h2>Needs someone</h2><a class="btn btn-ghost btn-sm" href="inbox.html">Open all <i data-icon="right"></i></a></div>
+      <div class="needs-row" id="needs"></div>
+
+      <div class="sechead"><h2>Your helpers</h2><div class="filters-s" id="filt"></div></div>
+      <div class="htable" id="table"></div>
+    </div>
+
+    <aside class="stack-lg">
+      <div class="panel">
+        <div class="spread"><h3>Team</h3><a class="btn btn-sm" href="team.html#invite"><i data-icon="plus"></i> Invite</a></div>
+        <ul class="people" id="people" style="list-style:none;padding:0;margin:8px 0 0"></ul>
+      </div>
+      <div class="panel">
+        <h3>What's been happening</h3>
+        <ul class="feed-s" id="feed" style="margin-top:6px"></ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script src="studio.js"></script>
+<script>
+studioShell('home');
+const hour = new Date().getHours();
+$('#hello').textContent = `Good ${hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'}, Sal.`;
+const open = WS.inbox.filter(i => i.state === 'open');
+const working = WS.helpers.filter(h => h.status === 'working').length;
+$('#sum').innerHTML = `${working} of your ${WS.helpers.length} helpers are working. They handled 68 things today; <b style="font-weight:600;color:var(--ink)">${open.length} need someone</b>.`;
+
+/* Needs someone */
+$('#needs').innerHTML = open.map(i => {
+  const h = wsHelper(i.h), d = helperDemo(h), p = person(i.assignee);
+  return `<div class="ncard"><div class="top">${helperAva(h, 26)}<span><b>${d.name}</b>, ${i.when}</span></div>
+    <h3>${esc(i.title)}</h3>
+    <div class="foot"><button class="btn btn-sm btn-primary" data-act="${i.id}">${esc(i.actions[0])}</button><a class="btn btn-sm btn-ghost" href="inbox.html?i=${i.id}">Open</a>
+      <span class="assignee">${personAva(p, 22)}${p.id === WS.me ? 'You' : p.first}</span></div></div>`;
+}).join('');
+$('#needs').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const card = b.closest('.ncard'); const it = WS.inbox.find(x => x.id === b.dataset.act);
+  card.innerHTML = `<div class="top">${icon('check')}<span><b>Done</b></span></div><h3>${esc(it.title)}</h3><p class="small muted">${esc(helperDemo(wsHelper(it.h)).name)} will take it from here: “${esc(it.actions[0])}”.</p>`;
+  card.style.boxShadow = 'inset 3px 0 0 var(--ok), var(--shadow-sm)';
+  toast('Done. The helper is taking care of it.');
+});
+
+/* Helpers table */
+const counts = { all: WS.helpers.length, working: 0, needs: 0, paused: 0, draft: 0 };
+WS.helpers.forEach(h => { counts[h.status]++; if (h.needs) counts.needs++; });
+const F = [['all', 'All'], ['working', 'Working'], ['needs', 'Needs someone'], ['paused', 'Paused'], ['draft', 'Not finished']];
+$('#filt').innerHTML = F.map(([k, l], i) => `<button aria-pressed="${i === 0}" data-f="${k}">${l}<span>${counts[k]}</span></button>`).join('');
+function rowHTML(h) {
+  const d = helperDemo(h), st = STATUS[h.status], who = person(h.edited[0]);
+  const total = h.week.reduce((a, b) => a + b, 0);
+  return `<a class="hrow" href="helper.html?h=${h.id}" data-status="${h.status}" data-needs="${h.needs ? 1 : 0}">
+    <span class="who">${helperAva(h, 40)}<span><strong>${d.name}</strong><span class="small faint">${d.role}</span></span></span>
+    <span><span class="pill ${st[1]}">${st[0]}</span></span>
+    <span class="small">${esc(h.today)}</span>
+    <span class="wk">${h.status === 'draft' ? '<span class="faint">No activity yet</span>' : spark(h.week) + `<span>${total} ${h.unit}</span>`}</span>
+    <span class="needs">${h.needs ? `<b>${h.needs}</b> needs someone` : h.draft ? `<span class="pill blue" style="background:var(--accent-tint);color:#7A5200">${h.draft} unpublished</span>` : '<span class="faint">All clear</span>'}</span>
+    <span class="chg">${personAva(who, 22)}${esc(h.edited[1])}</span></a>`;
+}
+$('#table').innerHTML = `<div class="hrow head"><span>Helper</span><span>Status</span><span>Today</span><span>This week</span><span>Attention</span><span>Last change</span></div>` + WS.helpers.map(rowHTML).join('');
+$('#filt').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $$('#filt button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  const f = b.dataset.f;
+  $$('#table a.hrow').forEach(r => r.classList.toggle('hide', !(f === 'all' || r.dataset.status === f || (f === 'needs' && r.dataset.needs === '1'))));
+});
+
+/* Team + activity */
+$('#people').innerHTML = WS.team.map(p => `<li>${personAva(p, 32)}<span>${p.first}${p.id === WS.me ? ' (you)' : ''}<span class="small faint" style="display:block;line-height:1.2">${ROLES[p.role].label}</span></span><i class="${p.online ? 'on' : 'off'}" title="${p.online ? 'Online now' : 'Away'}"></i></li>`).join('') +
+  WS.invites.map(v => `<li><span class="pava" style="width:32px;height:32px;background:var(--bg-2);color:var(--ink-3)">${icon('mail')}</span><span>${v.name.split(' ')[0]}<span class="small faint" style="display:block;line-height:1.2">Invited ${v.sent.toLowerCase()}</span></span></li>`).join('');
+$('#feed').innerHTML = WS.activity.map(([who, what, hid, when]) => {
+  const p = person(who), h = wsHelper(who);
+  const av = p ? personAva(p, 28) : helperAva(h, 28), name = p ? p.first : helperDemo(h).name;
+  return `<li>${av}<span><b>${name}</b> ${esc(what)}<span class="t">${when}</span></span></li>`;
+}).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your helper is working</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hero { position: relative; overflow: hidden; }
+  .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .9fr); gap: 64px; padding: 72px 0 72px; align-items: center; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .reach { list-style: none; padding: 0; margin: 14px 0 0; }
+  .reach li { display: grid; grid-template-columns: 36px 1fr auto; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .reach li:last-child { border-bottom: 0; }
+  .reach .ic { width: 22px; height: 22px; color: var(--ink-2); }
+  .reach strong { display: block; font-weight: 550; }
+  .reach span.d { display: block; font-size: 15px; color: var(--ink-2); }
+  .next { padding: 72px 0 140px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 56px; }
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li { padding: 0 0 24px 30px; position: relative; }
+  .timeline li::before { content: ""; position: absolute; left: 0; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line-2); }
+  .timeline li::after { content: ""; position: absolute; left: 6px; top: 22px; bottom: 0; width: 1px; background: var(--line-2); }
+  .timeline li:last-child::after { display: none; }
+  .timeline li:first-child::before { background: var(--ok); border-color: var(--ok); }
+  .timeline .when { font-size: 14px; color: var(--ink-3); }
+  @media (max-width: 1000px) { .hero-grid, .next, .cols { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav><a class="btn btn-sm" href="workspace.html">Your helpers</a></nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    
+    <div class="wrap hero-grid">
+      <div class="stack-lg">
+        <span class="pill live">Working since just now</span>
+        <h1 class="display" id="headline"></h1>
+        <p class="lead" id="lead"></p>
+        <div class="row">
+          <a class="btn btn-primary btn-lg" href="workspace.html">See your helpers</a>
+          <a class="btn btn-lg" href="index.html#helpers"><i data-icon="plus"></i> Build another helper</a>
+        </div>
+      </div>
+      <div id="card"></div>
+    </div>
+  </section>
+
+  <div class="wrap cols">
+    <section class="panel"><h2 style="font-size:30px" id="whereT"></h2><ul class="reach" id="where"></ul></section>
+    <section class="panel"><h2 style="font-size:30px">You can reach it too</h2><p class="muted small" style="margin-top:6px">No app needed. It recognizes your number and email.</p><ul class="reach" id="you"></ul></section>
+  </div>
+
+  <section class="wrap next">
+    <div class="stack"><h2>What happens next</h2><p class="muted">You don't need to do anything. Here's what to expect.</p></div>
+    <ol class="timeline" id="timeline"></ol>
+  </section>
+</main>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+const D = demoById(new URLSearchParams(location.search).get('d')) || demoById('receptionist');
+const NAME = STORE.get('name:' + D.id, D.name);
+const d = { ...D, name: NAME };
+document.title = `${NAME} is working`;
+$('#headline').innerHTML = `<em>${NAME}</em> is working.`;
+$('#lead').textContent = `${NAME} will text you, ${d.owner}, only when a decision is yours. Everything else, it handles.`;
+$('#card').innerHTML = helperCard(d, { status: 'Working' });
+$('#whereT').textContent = `Where ${NAME} works`;
+
+const W = [];
+if (d.number) W.push(['phone', d.number, 'Calls and texts, day and night', `<button class="btn btn-sm" onclick="this.textContent='Copied'">${icon('copy')} Copy</button>`]);
+if (d.steps.includes('email')) W.push(['mail', 'Email', 'Reads and sends email by your rules', '<span class="pill on">On</span>']);
+if (d.steps.includes('social')) W.push(['heart', 'Instagram and Facebook', 'Posts after your OK', '<span class="pill on">On</span>']);
+if (d.steps.includes('reviews')) W.push(['star', 'Google listing', 'Reviews, hours and posts', '<span class="pill on">On</span>']);
+if (d.steps.includes('shop')) W.push(['store', 'Your shop', 'Orders, tracking and stock', '<span class="pill on">On</span>']);
+if (d.steps.includes('accounting')) W.push(['book', 'QuickBooks', 'Your books', '<span class="pill on">On</span>']);
+if (d.steps.includes('bank')) W.push(['bank', 'Your bank', 'Read only', '<span class="pill on">On</span>']);
+if (d.steps.includes('channels')) W.push(['chat', 'Website chat', 'Waiting for your web person to paste two lines', '<span class="pill wait">Waiting</span>']);
+$('#where').innerHTML = W.map(([ic, t, s, r]) => `<li>${icon(ic)}<div><strong>${t}</strong><span class="d">${s}</span></div>${r}</li>`).join('');
+$('#you').innerHTML = [
+  ['sms', 'Text it', `"${NAME}, we're closed Thursday"`],
+  ['phone', 'Call it', `"What happened today?"`],
+  ['mail', 'Email it', 'Reply to its daily summary']
+].map(([ic, t, s]) => `<li>${icon(ic)}<div><strong>${t}</strong><span class="d">${esc(s)}</span></div><span class="pill on">On</span></li>`).join('');
+const WHEN = ['Now', 'Tonight at 6', 'This week'];
+$('#timeline').innerHTML = d.next.map((t, i) => `<li><p class="when">${WHEN[i] || 'Later'}</p><p>${esc(t)}</p></li>`).join('') +
+  (d.number ? `<li><p class="when">In a few days</p><p>Phone carriers approve business texting for ${d.number}. Texts send reliably from then on.</p></li>` : '');
+</script>
+</body>
+</html>

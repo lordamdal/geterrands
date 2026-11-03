@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Errand UX notes</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .doc { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 56px; padding: 48px 0 140px; }
+  .toc { position: sticky; top: 100px; align-self: start; }
+  .toc a { display: block; padding: 9px 12px; text-decoration: none; border-radius: 10px; color: var(--ink-2); }
+  .toc a:hover { color: var(--ink); background: rgba(14,27,46,.05); }
+  section.note { padding: 0 0 56px; }
+  section.note + section.note { border-top: 1px solid var(--line); padding-top: 48px; }
+  
+  .principles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 24px; }
+  .principles div { padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
+  .principles h3 { margin-bottom: 8px; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 22px; }
+  .sw { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .sw i { display: block; height: 76px; }
+  .sw div { padding: 10px 12px; font-size: 14.5px; }
+  .sw strong { display: block; font-weight: 550; }
+  .specimen { margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .specimen > div { padding: 18px 22px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: baseline; }
+  .specimen > div:last-child { border-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .tbl { overflow-x: auto; margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
+  th, td { text-align: left; vertical-align: top; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: 13.5px; color: var(--ink-3); font-weight: 500; }
+  td:first-child { font-weight: 550; white-space: nowrap; }
+  ul.plain { padding-left: 20px; margin: 16px 0 0; }
+  ul.plain li { margin: 8px 0; max-width: 70ch; }
+  @media (max-width: 1000px) { .doc { grid-template-columns: minmax(0, 1fr); } .toc { position: static; display: flex; flex-wrap: wrap; } .principles { grid-template-columns: 1fr; } td:first-child { white-space: normal; } }
+</style>
+</head>
+<body>
+<header class="topbar solid">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav><a class="btn btn-sm" href="map.html">Prototype map</a></nav>
+  </div>
+</header>
+
+<main class="wrap doc">
+  <nav class="toc" aria-label="On this page">
+    <a href="#principles">Principles</a>
+    <a href="#system">Design system</a>
+    <a href="#helpers">The 20 helpers</a>
+    <a href="#studio">The studio</a>
+    <a href="#laws">UX laws by screen</a>
+    <a href="#access">Older users</a>
+    <a href="#plumbing">Hidden setup work</a>
+    <a href="#open">Open questions</a>
+  </nav>
+
+  <article>
+    <section class="note" id="principles">
+      <h1>UX notes</h1>
+      <p class="lead" style="margin-top:16px">How the prototype is built and why. Written for whoever designs and builds the next version.</p>
+      <div class="principles">
+        <div><h3>The helper is a new employee</h3><p class="muted">Sal hires Rosa, gives her a phone, tells her the rules. No workflows, nodes or triggers ever appear. Her badge is the main object in the product.</p></div>
+        <div><h3>The builder does the hard part</h3><p class="muted">It reads the website, picks a local number, registers texting, guesses defaults. Sal only confirms. Complexity moves into the product, not onto the user.</p></div>
+        <div><h3>One question at a time</h3><p class="muted">Each step is a single card inside the conversation, with a recommended answer already picked and a "later" option.</p></div>
+        <div><h3>Never a dead end</h3><p class="muted">Every step has a way out: talk instead of type, bring in family, finish later, skip. Nothing is permanent; everything can be turned off.</p></div>
+      </div>
+    </section>
+
+    <section class="note" id="system">
+      <h2>Design system</h2>
+      <p class="muted" style="margin-top:10px">"Main Street": clean and bright, like a well-kept shop on a sunny street. Real photos of owners at work carry the warmth; the interface stays white and quiet around them, so a 71-year-old trusts it with a phone line and a bank feed.</p>
+      <div class="swatches">
+        <div class="sw"><i style="background:#FFFFFF;box-shadow:inset 0 -1px 0 rgba(16,34,27,.08)"></i><div><strong>White</strong>#FFFFFF, page</div></div>
+        <div class="sw"><i style="background:#F2F1EE"></i><div><strong>Stone</strong>#F2F1EE, sections</div></div>
+        <div class="sw"><i style="background:#10221B"></i><div><strong>Ink</strong>#10221B, text</div></div>
+        <div class="sw"><i style="background:#123B2E"></i><div><strong>Evergreen</strong>#123B2E, main buttons</div></div>
+        <div class="sw"><i style="background:#F2B33D"></i><div><strong>Marigold</strong>#F2B33D, "needs you" and highlights</div></div>
+        <div class="sw"><i style="background:#2E8A5E"></i><div><strong>Working green</strong>#2E8A5E, status</div></div>
+      </div>
+      <p style="margin-top:18px">Evergreen reads as steady and money-safe, like a bank awning or a hardware store sign. Marigold is the only warm color in the interface, so a decision waiting for the owner is the first thing the eye finds.</p>
+      <div class="specimen">
+        <div><span class="label">Display</span><span style="font-family:var(--serif);font-weight:650;font-size:52px;line-height:1;letter-spacing:-.04em">Hand off the <span class="mark">bookkeeping.</span></span></div>
+        <div><span class="label">Heading</span><span style="font-family:var(--serif);font-weight:650;font-size:32px;letter-spacing:-.025em">Where Rosa works</span></div>
+        <div><span class="label">Body, 18px</span><span>DM Sans for everything people read and act on. Bricolage Grotesque, with the friendly character of a shop sign, for headlines and names.</span></div>
+        <div><span class="label">Photos</span><span>Real owners at work (Unsplash, free license), each with the helper's latest message floating on it. The photo shows the business; the message shows the product.</span></div>
+        <div><span class="label">Shape</span><span>Buttons with softly rounded corners, pill chips, cards at 20–26px radius, light shadows. Stone panels instead of borders where possible.</span></div>
+        <div><span class="label">Targets</span><span>52px minimum height for buttons, 44px for chips, 18px base text.</span></div>
+      </div>
+    </section>
+
+    <section class="note" id="helpers">
+      <h2>The 20 helpers</h2>
+      <p class="muted" style="margin-top:10px">Picked from what owners complain about most: cash flow, slow payers, missed calls, marketing that never happens, stock and staff. Each helper asks only for what it needs.</p>
+      <div class="tbl"><table><thead><tr><th>Helper</th><th>Area</th><th>Business in the demo</th><th>It asks for</th></tr></thead><tbody id="helperTable"></tbody></table></div>
+    </section>
+
+    <section class="note" id="studio">
+      <h2>The studio</h2>
+      <p class="muted" style="margin-top:10px">Where an owner and their team look after every helper. Built around one idea: a helper is a new employee the whole team manages together, so the studio borrows from how small teams already work: a group text, a shared to-do list, a sticky note on the fridge.</p>
+      <div class="tbl"><table><thead><tr><th>Decision</th><th>Why</th></tr></thead><tbody>
+        <tr><td>"Needs someone" comes first</td><td>The only thing an owner must act on sits at the top of the workspace, marked in marigold (Von Restorff). Everything else is tracking.</td></tr>
+        <tr><td>Today in a sentence</td><td>Each helper's day is one plain sentence, with a small 7-day line beside it. No charts to decode (Miller's law).</td></tr>
+        <tr><td>Drafts, then publish</td><td>Edits from anyone are saved as a draft; the helper keeps using the live version until someone presses Publish. Every version can be restored in one click, so nobody is afraid to try a change.</td></tr>
+        <tr><td>Edit in plain words</td><td>A helper's job, greeting, tone and rules are written like instructions to a person. A live practice chat beside the editor shows the effect before publishing.</td></tr>
+        <tr><td>Helpers suggest their own fixes</td><td>"4 people asked about Sundays. Add it?" turns gaps into one-tap improvements (Tesler's law: the product does the noticing).</td></tr>
+        <tr><td>Comments where the work is</td><td>Team notes sit on the exact rule or request they're about, with @mentions that arrive as texts, because that's where an older owner and his grandson already talk.</td></tr>
+        <tr><td>Four roles in plain words</td><td>Owner, can change helpers, can handle requests, can only look. Access can be limited to certain helpers (an accountant sees only money helpers).</td></tr>
+        <tr><td>Invite by text</td><td>People join with a link and a text-message code. No passwords to forget.</td></tr>
+        <tr><td>Who hears about what</td><td>Each kind of alert goes to the right people (an upset customer to Sal and Ana, the monthly report to Sal and Dana), so the owner isn't the bottleneck.</td></tr>
+        <tr><td>Presence</td><td>"Marco is editing" and "Marco is typing" prevent two people changing the same thing and make a small team feel together.</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="note" id="laws">
+      <h2>UX laws by screen</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Screen</th><th>Law</th><th>How it shows up</th></tr></thead>
+        <tbody>
+          <tr><td>Home</td><td>Hick's law</td><td>One question, one box. Six suggested jobs under it; the full gallery of 20 sits lower, filtered into five areas.</td></tr>
+          <tr><td>Home</td><td>Postel's law</td><td>Talk or type, any wording. The request is matched to the closest helper, so anything typed leads somewhere useful.</td></tr>
+          <tr><td>Demo</td><td>Jakob's law</td><td>Each helper is shown working in the place owners already know: a text thread, an inbox, a bank feed, an Instagram post.</td></tr>
+          <tr><td>Build</td><td>Tesler's law</td><td>The builder reads the website instead of asking for hours and prices; it only asks about the two facts it's unsure of.</td></tr>
+          <tr><td>Build</td><td>Goal-gradient</td><td>Six-cell progress bar plus a plan checklist that ticks off. The badge fills in as Sal answers.</td></tr>
+          <tr><td>Build</td><td>Doherty threshold</td><td>Reading the website streams each finding as it happens, so waiting looks like work.</td></tr>
+          <tr><td>Build</td><td>Hick's law, serial position</td><td>Each choice has 2–3 options, recommended one first and pre-selected, quiet "skip" last.</td></tr>
+          <tr><td>Build</td><td>Zeigarnik effect</td><td>"Finish later" offers a text reminder that names the one step left.</td></tr>
+          <tr><td>Build</td><td>Common region</td><td>Every question lives in its own bordered card, so the active one is obvious.</td></tr>
+          <tr><td>Try it</td><td>Mental models</td><td>Testing is a phone call, because that's how Sal judges an employee. Fixes are spoken, not configured.</td></tr>
+          <tr><td>Try it</td><td>Undo over confirm</td><td>Every change shows "Changed" with an Undo button instead of an "are you sure?" dialog.</td></tr>
+          <tr><td>Live</td><td>Peak-end rule</td><td>The biggest type in the product: "Rosa is answering your phone." Her number, a window sign, and what happens tonight.</td></tr>
+          <tr><td>Rosa today</td><td>Von Restorff effect</td><td>The only blue block on the page is the one thing that needs Sal.</td></tr>
+          <tr><td>Rosa today</td><td>Miller's law</td><td>The day is one sentence, not a grid of numbers.</td></tr>
+          <tr><td>Where Rosa works</td><td>Law of similarity</td><td>Every channel and tool is the same tile and opens the same drawer: one sentence, will, won't, one button.</td></tr>
+          <tr><td>Talk anywhere</td><td>Jakob's law</td><td>Sal uses texting, email and calls he already knows. The app is optional.</td></tr>
+          <tr><td>Everywhere</td><td>Fitts's law</td><td>Large targets close to where the eye is; the next action always sits directly under the question.</td></tr>
+          <tr><td>Everywhere</td><td>Aesthetic-usability</td><td>Calm, precise layout builds the trust needed to hand over a phone line and a calendar.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="note" id="access">
+      <h2>Designing for a 71-year-old</h2>
+      <ul class="plain">
+        <li>Text never smaller than 15px; body at 19px; contrast at or above 7:1 for body text.</li>
+        <li>A microphone next to every text box. Speaking is the default path, not an extra.</li>
+        <li>No technical words anywhere in the product: no integration, workflow, trigger, webhook, API, deploy. It's "let Rosa use your calendar" and "put Rosa to work".</li>
+        <li>Every permission says in plain words what the helper will and won't do, before Sal agrees.</li>
+        <li>"Get help from family" is always one tap away and gives the helper limited access only.</li>
+        <li>Status never relies on color alone: every colored pill also says "On", "Off" or "Waiting on Marco".</li>
+        <li>Respects reduced-motion settings; motion only marks what just changed.</li>
+      </ul>
+    </section>
+
+    <section class="note" id="plumbing">
+      <h2>Hidden setup work the product has to absorb</h2>
+      <p class="muted" style="margin-top:10px">This is where competitors leave users stuck. Each line is one tap for Sal and a real job for the product. Requirements change; verify each with the provider before building.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Sal sees</th><th>What has to happen behind it</th></tr></thead>
+        <tbody>
+          <tr><td>"Give her a new local number"</td><td>Buy a number from a phone provider, point its calls and texts at the agent, set the caller name customers see.</td></tr>
+          <tr><td>"Send my shop's calls to her"</td><td>Call forwarding codes and settings differ by carrier. Detect the carrier and show exact steps, or offer to move the number over.</td></tr>
+          <tr><td>Business texting</td><td>In the US, businesses texting from a regular 10-digit number generally need carrier registration (A2P 10DLC) or messages get filtered. Approval can take days, so calls should work before texts do, and the UI must say so.</td></tr>
+          <tr><td>WhatsApp</td><td>Uses Meta's WhatsApp Business Platform: business verification and display name approval. A number used there can't also be in the regular WhatsApp app.</td></tr>
+          <tr><td>Her own email</td><td>Create a mailbox on the product's domain with proper sender authentication (SPF, DKIM, DMARC) so her mail isn't marked as spam.</td></tr>
+          <tr><td>Google Calendar</td><td>Sign-in with Google asking for the narrowest access possible. Broader access scopes can require Google's app review.</td></tr>
+          <tr><td>Chat on the website</td><td>A small code snippet, or a plugin for site builders. Most owners can't do this themselves: send instructions to their web person.</td></tr>
+          <tr><td>Facebook and Instagram</td><td>Meta sign-in with page messaging permissions; the app needs Meta's review before going public.</td></tr>
+          <tr><td>Telegram</td><td>A bot account created through Telegram's bot API. The simplest channel to turn on.</td></tr>
+          <tr><td>Voice</td><td>Speech recognition, the agent, and a natural voice, all fast enough to feel like a person. Some US states require everyone's consent to record calls, so the greeting may need a recording notice.</td></tr>
+          <tr><td>"She knows it's you"</td><td>Recognizing Sal by caller ID or email alone is spoofable. Ask for a short PIN or a confirmation text before anything involving money or deleting.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="note" id="open">
+      <h2>Open questions for the next round</h2>
+      <ul class="plain">
+        <li>Pricing Sal can understand: a flat monthly price per helper with minutes included, rather than credits.</li>
+        <li>What happens when Rosa gets something wrong in front of a customer, and how Sal finds out.</li>
+        <li>How much a family member can do: watch only, or change rules too.</li>
+        <li>Spending limits: below what amount can Rosa act without asking?</li>
+        <li>The second helper: does Rosa take on more jobs, or does Sal hire someone new?</li>
+      </ul>
+    </section>
+  </article>
+</main>
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+$('#helperTable').innerHTML = DEMOS.map(d => `<tr><td><a href="demo.html?d=${d.id}">${d.name}, ${d.role.toLowerCase()}</a></td><td>${CATS[d.cat].label}</td><td>${d.biz}</td><td class="small">${d.steps.filter(s => !['you','rules'].includes(s)).map(s => STEP_TOOLS[s][1]).join(', ') || 'Nothing extra'}</td></tr>`).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Errand helper demo</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .crumbs { padding-top: 28px; font-size: 15px; color: var(--ink-3); display: flex; gap: 8px; align-items: center; }
+  .crumbs a { color: var(--ink-2); text-decoration: none; }
+  .crumbs a:hover { color: var(--ink); }
+  .top { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 64px; padding: 28px 0 40px; align-items: start; }
+  .top .glow { opacity: .55; height: 620px; inset: -20% -20% auto 30%; }
+  .left, .right { position: relative; z-index: 1; }
+  .left > * + * { margin-top: 22px; }
+  .title-row { display: flex; gap: 18px; align-items: center; }
+  .title-row h1 { font-size: clamp(38px, 4.4vw, 58px); }
+  .why { border-left: 3px solid var(--marigold); padding: 2px 0 2px 14px; max-width: 52ch; }
+  .ask { background: var(--bg-2); border: 0; border-radius: 22px; padding: 20px 22px; box-shadow: var(--shadow-sm); }
+  .ask .q { font-family: var(--serif); font-weight: 500; font-size: 21px; line-height: 1.4; letter-spacing: -0.01em; margin-top: 8px; }
+  .ask textarea { width: 100%; border: 1px solid var(--line-2); border-radius: 14px; padding: 12px 14px; font-size: 17px; line-height: 1.45; margin-top: 10px; background: #fff; resize: vertical; min-height: 96px; }
+  .needs { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .needs li { display: flex; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 16.5px; }
+  .needs li:last-child { border-bottom: 0; }
+  .needs .ic { width: 20px; height: 20px; color: var(--ink-2); }
+  .stage-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .stage-head { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+  #stage { width: 100%; display: flex; justify-content: center; }
+  .didbox { width: 100%; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }
+  .more { padding: 80px 0 120px; }
+  .more .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 26px; }
+  @media (max-width: 1000px) { .top, .two, .more .grid3 { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav class="navlinks"><a href="index.html#helpers">All helpers</a><a href="index.html#how">How it works</a></nav>
+    <nav><a class="btn btn-primary btn-sm" id="topBuild" href="#">Build this helper</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="crumbs"><a href="index.html#helpers">Helpers</a><span>/</span><span id="crumbCat"></span></div>
+  <div id="banner" style="margin-top:20px"></div>
+
+  <section class="top">
+        <div class="left">
+      <div class="title-row"><span id="ava"></span><div><p class="label" id="cat"></p><h1 id="title"></h1></div></div>
+      <p class="lead" id="summary"></p>
+      <p class="why"><span class="label" style="display:block;margin-bottom:2px">Why owners ask for this</span><span id="why"></span></p>
+
+      <div class="ask">
+        <p class="label" id="askWho"></p>
+        <p class="q" id="askQ"></p>
+        <div id="askEdit" class="hide"><textarea id="askIn" aria-label="Change the request"></textarea></div>
+        <div class="row" style="margin-top:16px">
+          <a class="btn btn-primary" id="build" href="#"><span>Build a helper like <span id="nm1"></span></span><i data-icon="right"></i></a>
+          <button class="btn btn-ghost" id="editBtn"><i data-icon="edit"></i> Change the request</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="spread"><h3>It will ask you for</h3><span class="small faint" id="time"></span></div>
+        <ul class="needs" id="needs" style="margin-top:10px"></ul>
+      </div>
+    </div>
+
+    <div class="right stage-wrap">
+      <div class="stage-head"><p class="label" id="kind"></p><button class="btn btn-sm" id="replay"><i data-icon="refresh"></i> Play again</button></div>
+      <div id="stage"></div>
+      <div class="panel didbox"><p class="label">What <span id="nm2"></span> did</p><ul class="checklist" id="did" style="margin-top:6px"></ul></div>
+    </div>
+  </section>
+
+  <div class="two">
+    <div class="panel"><h3 class="h3-serif">House rules it follows</h3><p class="small muted" style="margin-top:4px">You can change these anytime by just saying so.</p><ul class="checklist" id="rules" style="margin-top:12px"></ul></div>
+    <div class="panel"><h3 class="h3-serif">Once it's working</h3><p class="small muted" style="margin-top:4px">What to expect after you put it to work.</p><ul class="checklist" id="next" style="margin-top:12px"></ul></div>
+  </div>
+
+  <section class="more">
+    <div class="spread"><h2 id="moreTitle"></h2><a class="btn btn-ghost" href="index.html#helpers">See all 20 <i data-icon="right"></i></a></div>
+    <div class="grid3" id="more"></div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+const d = demoById(new URLSearchParams(location.search).get('d')) || demoById('receptionist');
+const c = CATS[d.cat];
+document.title = `${d.name}, ${d.role.toLowerCase()} | Errand`;
+$('#crumbCat').textContent = c.label;
+$('#ava').innerHTML = avatarHTML(d, 'xl');
+$('#cat').innerHTML = `<span style="color:${c.ink};display:inline-flex;gap:6px;align-items:center">${icon(CAT_ICON[d.cat])}${c.label}</span>`;
+$('#title').innerHTML = `${d.name}, <em>${d.role.toLowerCase()}</em>`;
+$('#summary').textContent = d.summary;
+$('#why').textContent = d.why;
+$('#banner').innerHTML = photoHTML(d, { h: 300 });
+$('#askWho').textContent = `${d.ownerFull} at ${d.biz} typed:`;
+$('#askQ').textContent = `“${d.prompt}”`;
+$('#askIn').value = d.prompt;
+$('#nm1').textContent = d.name; $('#nm2').textContent = d.name;
+$('#time').textContent = d.setupTime;
+$('#needs').innerHTML = d.steps.map(s => `<li>${icon(STEP_TOOLS[s][0])}<span>${STEP_ASK[s]}</span></li>`).join('');
+$('#kind').innerHTML = `<span style="display:inline-flex;gap:6px;align-items:center">${icon(KIND_ICON[d.watch.kind])}${KIND_LABEL[d.watch.kind]}: ${esc(d.watch.title)}</span>`;
+const li = t => `<li class="ok"><span class="box">${icon('check')}</span><span>${esc(t)}</span></li>`;
+$('#rules').innerHTML = d.rules.map(li).join('');
+$('#next').innerHTML = d.next.map(li).join('');
+$('#moreTitle').innerHTML = `More helpers for <em>${c.label.toLowerCase()}</em>`;
+const more = DEMOS.filter(x => x.id !== d.id && x.cat === d.cat).concat(DEMOS.filter(x => x.cat !== d.cat)).slice(0, 3);
+$('#more').innerHTML = more.map(demoCardHTML).join('');
+
+const buildHref = () => `build.html?d=${d.id}&p=${encodeURIComponent($('#askIn').value.trim() || d.prompt)}`;
+$('#build').addEventListener('click', e => { e.preventDefault(); location.href = buildHref(); });
+$('#topBuild').addEventListener('click', e => { e.preventDefault(); location.href = buildHref(); });
+$('#editBtn').onclick = () => { $('#askQ').classList.add('hide'); $('#askEdit').classList.remove('hide'); $('#editBtn').classList.add('hide'); $('#askIn').focus(); $('#askWho').textContent = 'Make it yours. Change anything:'; };
+
+function play() { $('#did').innerHTML = ''; playWatch($('#stage'), d, { onDid: t => $('#did').insertAdjacentHTML('beforeend', li(t)) }); }
+$('#replay').onclick = play;
+play();
+</script>
+</body>
+</html>

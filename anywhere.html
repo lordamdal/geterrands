@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talk to Rosa anywhere</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .intro { padding: 64px 0 40px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; align-items: end; }
+  .channels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding: 20px 0 56px; }
+  .ch h3 { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; font-family: var(--serif); font-weight: 400; font-size: 24px; }
+  .ch h3 .ic { color: var(--ink-2); }
+  .ch .phone { height: 560px; width: auto; margin: 10px; }
+  .mail { background: var(--surface); border: 1px solid var(--line); border-radius: 30px; box-shadow: var(--shadow-lg); height: 580px; display: flex; flex-direction: column; overflow: hidden; }
+  .mail-meta { padding: 18px 20px; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .mail-meta strong { font-family: var(--serif); font-weight: 400; font-size: 21px; display: block; margin-bottom: 4px; }
+  .mail .mail-body { padding: 18px 20px; overflow: auto; flex: 1; font-size: 16px; line-height: 1.5; max-height: none; }
+  .mail-body ul { margin: 0; padding-left: 18px; }
+  .reply { border-left: 2px solid var(--line-2); padding: 4px 0 4px 14px; }
+  .reply.rosa { border-color: var(--accent); }
+  .reply .from { font-size: 13px; font-weight: 500; color: var(--ink-3); }
+  .world { padding: 40px 0 140px; }
+  .acts { list-style: none; padding: 0; margin: 20px 0 0; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; overflow: hidden; }
+  .acts li { display: grid; grid-template-columns: 48px 1.1fr 1.6fr auto; gap: 18px; padding: 20px 24px; border-bottom: 1px solid var(--line); align-items: start; }
+  .acts li:last-child { border-bottom: 0; }
+  .acts .ic { width: 24px; height: 24px; color: var(--navy); margin-top: 3px; }
+  .acts strong { font-size: 18px; font-weight: 550; }
+  .replay { margin: 12px 10px 0; }
+  @media (max-width: 1100px) { .channels { grid-template-columns: minmax(0, 1fr); } .intro { grid-template-columns: minmax(0, 1fr); } .acts li { grid-template-columns: 32px 1fr; } .acts li > :nth-child(n+3) { grid-column: 2; } }
+</style>
+</head>
+<body>
+<header class="topbar solid">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav><a class="btn btn-sm" href="workspace.html"><span>Back to <span data-agent-name>Rosa</span>'s day</span></a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <div class="stack">
+      <h1>Sal never has to <em>open the app.</em></h1>
+      <p class="lead">He texts, emails or calls <span data-agent-name>Rosa</span> the way he'd talk to an assistant. She does the rest, out in the real world.</p>
+    </div>
+    <p class="muted">Every channel reaches the same <span data-agent-name>Rosa</span>, with the same memory. Something said by text is known on the phone.</p>
+  </section>
+
+  <section class="channels">
+    <div class="ch">
+      <h3><i data-icon="sms"></i> By text</h3>
+      <div class="phone">
+        <div class="phone-top"><span class="ava" style="width:32px;height:32px;font-size:15px;--tint:#E0EAF4">R</span> <span data-agent-name>Rosa</span><span class="muted" style="margin-left:auto">(216) 555-0148</span></div>
+        <div class="phone-screen" id="smsScreen"></div>
+      </div>
+      <button class="btn btn-sm replay" data-replay="sms"><i data-icon="refresh"></i> Play again</button>
+    </div>
+
+    <div class="ch">
+      <h3><i data-icon="mail"></i> By email</h3>
+      <div class="mail">
+        <div class="mail-meta"><strong>Your day: 9 calls, 3 drop-offs booked</strong><span class="muted"><span data-agent-name>Rosa</span> &lt;rosa@moretti.errand.mail&gt; to Sal, 6:00 PM</span></div>
+        <div class="mail-body">
+          <p>Hi Sal, here's today.</p>
+          <ul>
+            <li>9 calls and 6 messages. Nobody waited.</li>
+            <li>Booked: Dana (Thu 10), Luis (Sat 11), Mrs. Patel (Sat 2, your exception).</li>
+            <li>Ken's loafers: I'll text him Friday morning.</li>
+          </ul>
+          <p>Tomorrow you have one drop-off. Reply to tell me anything.</p>
+          <div class="reply"><p class="from">Sal replied, 7:14 PM</p><p>Heel tips go up to $20 starting Monday.</p></div>
+          <div class="reply rosa"><p class="from"><span data-agent-name>Rosa</span> replied, 7:14 PM</p><p>Got it. From Monday I'll quote heel tips at $20. I also texted Marco to change the price on your website.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ch">
+      <h3><i data-icon="phone"></i> By phone</h3>
+      <div class="phone">
+        <div class="phone-top"><i data-icon="phone"></i> <span>Sal calling <span data-agent-name>Rosa</span></span><span class="num muted" style="margin-left:auto">1:12</span></div>
+        <div class="phone-screen" id="callScreen"></div>
+      </div>
+      <button class="btn btn-sm replay" data-replay="call"><i data-icon="refresh"></i> Play again</button>
+    </div>
+  </section>
+
+  <section class="world">
+    <div class="spread"><h2><span data-agent-name>Rosa</span> acts in the world for him</h2><span class="small muted">Anything that spends money or speaks for Sal waits for his yes</span></div>
+    <ul class="acts">
+      <li><i data-icon="truck"></i><div><strong>Calls a supplier</strong><p class="small muted">Phone or email</p></div><p>Called Lorain Leather Supply and ordered 2 boxes of soles. Texted Sal the delivery date.</p><span class="pill blue">Sal says yes first</span></li>
+      <li><i data-icon="sms"></i><div><strong>Tells customers their shoes are ready</strong><p class="small muted">Text or WhatsApp</p></div><p>Sal texts "Ken's done". Rosa texts Ken, and reminds him again in a week if he hasn't picked up.</p><span class="pill on">Automatic</span></li>
+      <li><i data-icon="calendar"></i><div><strong>Moves appointments</strong><p class="small muted">Calendar plus texts</p></div><p>Sal said he's closed Thursday. Rosa moved two bookings to Friday and told both customers.</p><span class="pill on">Automatic</span></li>
+      <li><i data-icon="star"></i><div><strong>Asks for reviews</strong><p class="small muted">Text, a day after pickup</p></div><p>Sends happy customers a link to leave a Google review. Skips anyone who complained.</p><span class="pill off">Off until Sal turns it on</span></li>
+    </ul>
+  </section>
+</main>
+
+<script src="app.js"></script>
+<script>
+const SCRIPTS = {
+  sms: [
+    ['me', "Rosa we're closed Thursday. My grandson's wedding"],
+    ['agent', "Congratulations! I'll tell callers we're closed Thursday, Nov 12. Dana and Mr. Lee are booked that day. Move them to Friday?"],
+    ['me', 'yes friday'],
+    ['agent', "Done. Both said Friday works. I added Thursday to your hours on Google too."],
+    ['me', 'thank you'],
+    ['agent', 'Enjoy the wedding, Sal.']
+  ],
+  call: [
+    ['agent', 'Hi Sal.'],
+    ['me', "What's tomorrow look like?"],
+    ['agent', "Just Dana at 10 for a resole. Also, last week you said soles were running low. Should I order more from Lorain Leather Supply?"],
+    ['me', 'Yeah, two boxes.'],
+    ['agent', "I'll call them now and text you when they'll deliver."],
+    ['me', 'Good.'],
+    ['agent', 'Lorain Leather says Wednesday. I put it on your calendar.']
+  ]
+};
+let runs = { sms: 0, call: 0 };
+async function play(key) {
+  const my = ++runs[key];
+  const scr = $(key === 'sms' ? '#smsScreen' : '#callScreen');
+  scr.innerHTML = `<div class="sms-time">${key === 'sms' ? 'Monday 8:05 AM' : 'Live transcript'}</div>`;
+  for (const [who, text] of SCRIPTS[key]) {
+    await wait(who === 'agent' ? 1200 : 900);
+    if (my !== runs[key]) return;
+    const b = el(`<div class="sms ${who}"></div>`);
+    b.textContent = text.replace(/^Rosa /, agentName() + ' ');
+    scr.appendChild(b); scr.scrollTop = scr.scrollHeight;
+  }
+}
+document.addEventListener('click', e => { const r = e.target.closest('[data-replay]'); if (r) play(r.dataset.replay); });
+document.addEventListener('DOMContentLoaded', () => { play('sms'); setTimeout(() => play('call'), 600); });
+</script>
+</body>
+</html>

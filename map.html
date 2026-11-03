@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Errand prototype map</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .head { padding: 64px 0 36px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; align-items: end; }
+  .flow { background: var(--surface); border: 1px solid var(--line); border-radius: 26px; overflow: hidden; }
+  .flow a { display: grid; grid-template-columns: 56px 220px 1fr 32px; gap: 20px; align-items: center; padding: 18px 24px; text-decoration: none; border-bottom: 1px solid var(--line); }
+  .flow a:last-child { border-bottom: 0; }
+  .flow a:hover { background: var(--bg); }
+  .flow .n { font-family: var(--serif); font-size: 30px; color: var(--ink-3); }
+  .flow strong { font-weight: 550; font-size: 18px; }
+  .flow .ic { color: var(--ink-3); }
+  .stage { margin: 40px 0 14px; }
+  .demos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .demos a { display: flex; gap: 12px; align-items: center; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; text-decoration: none; }
+  .demos a:hover { box-shadow: var(--shadow); }
+  .demos .ava { width: 36px; height: 36px; font-size: 16px; }
+  .demos p { line-height: 1.25; }
+  @media (max-width: 1000px) { .head { grid-template-columns: 1fr; } .demos { grid-template-columns: repeat(2, minmax(0, 1fr)); } .flow a { grid-template-columns: 40px 1fr 24px; } .flow a p.small { display: none; } }
+</style>
+</head>
+<body>
+<header class="topbar solid">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav><span class="pill">Prototype v0.4</span><a class="btn btn-primary btn-sm" href="index.html">Open the home page</a></nav>
+  </div>
+</header>
+<main class="wrap" style="padding-bottom:120px">
+  <div class="head">
+    <h1>Prototype <em>map</em></h1>
+    <p class="lead">Every screen, in the order an owner meets them. The dark bar at the bottom of each page moves forward and back.</p>
+  </div>
+
+  <h2 class="stage" style="font-size:28px">The main path</h2>
+  <div class="flow">
+    <a href="index.html"><span class="n">1</span><strong>Home</strong><p class="small muted">Prompt, 20 helpers, live demos, how it works, trust, questions.</p><i data-icon="right"></i></a>
+    <a href="demo.html?d=receptionist"><span class="n">2</span><strong>A helper's page</strong><p class="small muted">Watch it work, what it will ask for, its house rules.</p><i data-icon="right"></i></a>
+    <a href="build.html?d=receptionist"><span class="n">3</span><strong>Build</strong><p class="small muted">The builder asks one thing at a time; the helper's card fills in live.</p><i data-icon="right"></i></a>
+    <a href="test.html?d=receptionist"><span class="n">4</span><strong>Try it</strong><p class="small muted">A practice run, and changes made by just saying them.</p><i data-icon="right"></i></a>
+    <a href="live.html?d=receptionist"><span class="n">5</span><strong>Live</strong><p class="small muted">The moment it starts working, and what happens next.</p><i data-icon="right"></i></a>
+    <a href="workspace.html"><span class="n">6</span><strong>Workspace</strong><p class="small muted">Every helper at a glance: status, today, this week, what needs someone, who changed what.</p><i data-icon="right"></i></a>
+    <a href="helper.html?h=rosa"><span class="n">7</span><strong>Edit a helper</strong><p class="small muted">Track it, edit its job and rules, comment with your team, publish drafts, go back to any version, test it live.</p><i data-icon="right"></i></a>
+    <a href="inbox.html"><span class="n">8</span><strong>Needs someone</strong><p class="small muted">Shared decisions: assign to a teammate, add team notes, answer in one tap.</p><i data-icon="right"></i></a>
+    <a href="team.html"><span class="n">9</span><strong>Team</strong><p class="small muted">Invite people by text, plain-language roles, per-helper access, who hears about what.</p><i data-icon="right"></i></a>
+    <a href="connections.html"><span class="n">10</span><strong>Connections</strong><p class="small muted">Every channel and tool turns on the same way.</p><i data-icon="right"></i></a>
+    <a href="anywhere.html"><span class="n">11</span><strong>Talk anywhere</strong><p class="small muted">Run your helper by text, email or phone.</p><i data-icon="right"></i></a>
+    <a href="ux-notes.html"><span class="n">12</span><strong>UX notes</strong><p class="small muted">Design system, UX laws, the hidden setup work.</p><i data-icon="right"></i></a>
+  </div>
+
+  <h2 class="stage" style="font-size:28px">All 20 helpers</h2>
+  <p class="muted" style="margin-bottom:16px">Each opens its own page; "Build" and "Try" follow that helper's own setup.</p>
+  <div class="demos" id="demos"></div>
+</main>
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+$('#demos').innerHTML = DEMOS.map(d => `<a href="demo.html?d=${d.id}">${avatarHTML(d)}<div><p style="font-weight:550">${d.name}</p><p class="small muted">${d.role}</p></div></a>`).join('');
+</script>
+</body>
+</html>

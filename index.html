@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Errand: helpers for small business</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Hero */
+  .hero { position: relative; padding: 76px 0 40px; overflow: hidden; }
+  .hero-in { position: relative; z-index: 1; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .announce { display: inline-flex; gap: 10px; align-items: center; padding: 6px 14px 6px 8px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 15px; text-decoration: none; box-shadow: var(--shadow-sm); }
+  .announce b { font-weight: 600; background: var(--marigold); color: var(--ink); padding: 3px 10px; border-radius: 999px; font-size: 13px; }
+  .hero h1 { margin-top: 28px; font-size: clamp(38px, 7vw, 100px); line-height: .96; letter-spacing: -0.045em; }
+  .rot-line { display: block; position: relative; height: 1.04em; }
+  .rot { position: absolute; left: 0; right: 0; white-space: nowrap; transition: opacity .45s ease, transform .45s ease; }
+  .rot span { background: linear-gradient(transparent 64%, var(--marigold) 64%, var(--marigold) 90%, transparent 90%); padding: 0 .05em; }
+  .rot.out { opacity: 0; transform: translateY(16px); }
+  .street { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-top: 64px; align-items: end; text-align: left; width: 100%; }
+  .street a { text-decoration: none; transition: transform .4s ease; }
+  .street a:nth-child(odd) .photo { height: 360px !important; }
+  .street a:nth-child(even) .photo { height: 300px !important; }
+  .street a.on { transform: translateY(-10px); }
+  .street a.on .note { box-shadow: inset 3px 0 0 var(--marigold), 0 14px 28px -12px rgba(0,0,0,.4); }
+  .street .who { margin-top: 10px; font-size: 15px; color: var(--ink-2); }
+  .street .who b { color: var(--ink); font-weight: 600; }
+  .hero .lead { margin: 26px auto 0; text-align: center; max-width: 40ch; }
+
+  .prompt { width: min(780px, 100%); margin-top: 36px; background: #fff; border: 1px solid var(--line-2); border-radius: 22px; box-shadow: var(--shadow-lg); text-align: left; transition: box-shadow .2s, border-color .2s; }
+  .prompt:focus-within { border-color: var(--ink-2); }
+  .prompt textarea { display: block; width: 100%; border: 0; outline: none; resize: none; background: transparent; padding: 22px 24px 6px; font-size: 20px; line-height: 1.45; min-height: 104px; }
+  .prompt textarea::placeholder { color: var(--ink-3); }
+  .prompt-bar { display: flex; align-items: center; gap: 8px; padding: 8px 10px 10px 12px; }
+  .prompt-bar .chip { min-height: 38px; font-size: 14.5px; }
+  .prompt-bar .chip::before { display: none; }
+  .mic { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--surface); display: grid; place-items: center; cursor: pointer; margin-left: auto; }
+  .mic.listening { background: var(--accent-tint); border-color: var(--accent); color: var(--accent); animation: blink 1s infinite; }
+  .tryline { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .tryline .row { justify-content: center; max-width: 860px; }
+
+  .channels { position: relative; z-index: 1; margin-top: 64px; text-align: center; }
+  .channels .row { justify-content: center; gap: 10px 28px; margin-top: 16px; color: var(--ink-2); }
+  .channels .row span { display: inline-flex; gap: 8px; align-items: center; font-size: 16px; }
+
+  section.block { padding: 110px 0 0; }
+  .sec-head { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; margin-bottom: 36px; }
+  .sec-head h2 { font-size: clamp(36px, 4.4vw, 58px); line-height: 1.02; letter-spacing: -0.025em; }
+  .sec-head .lead { justify-self: end; }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 26px; }
+  .filters button { min-height: 42px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; font-size: 15.5px; display: inline-flex; gap: 8px; align-items: center; }
+  .filters button .n { color: var(--ink-3); font-size: 13.5px; }
+  .filters button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .filters button[aria-pressed="true"] .n { color: rgba(255,255,255,.6); }
+  .filters .ic { width: 17px; height: 17px; }
+  .dcard.own { background: var(--bg-2); border: 0; }
+  .own-in { padding: 28px; display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+
+  .watch { overflow: hidden; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 48px; align-items: start; background: var(--bg-2); border: 0; border-radius: 30px; padding: 36px; box-shadow: var(--shadow); }
+  .watch-tabs { display: flex; flex-direction: column; gap: 8px; }
+  .wtab { display: flex; gap: 14px; align-items: center; text-align: left; padding: 14px; border-radius: 18px; border: 1px solid transparent; background: transparent; cursor: pointer; }
+  .wtab:hover { background: rgba(255,255,255,.6); }
+  .wtab[aria-selected="true"] { background: #fff; border-color: var(--line); box-shadow: var(--shadow-sm); }
+  .wtab strong { display: block; font-weight: 550; }
+  .wtab span.d { font-size: 15px; color: var(--ink-2); }
+  .watch-stage { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 28px; align-items: start; min-height: 600px; }
+  .watch-stage .phone { margin: 10px auto; }
+  .did-list .checklist li { font-size: 15.5px; align-items: flex-start; }
+  .did-list .checklist .box { margin-top: 2px; }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .step { background: var(--bg-2); border: 0; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+  .step .n { font-family: var(--serif); font-weight: 750; font-size: 44px; line-height: 1; color: var(--green-2); }
+  .step .viz { margin-top: auto; background: #fff; border-radius: 14px; padding: 14px; font-size: 14.5px; }
+  .viz .row { gap: 6px; }
+  .viz .tag { font-size: 13px; background: var(--surface); }
+
+  .handled { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--line); }
+  .handled > div { padding: 28px 28px 30px 0; border-bottom: 1px solid var(--line); }
+  .handled > div:not(:nth-child(3n+1)) { padding-left: 28px; border-left: 1px solid var(--line); }
+  .handled .ic { width: 26px; height: 26px; color: var(--green-2); margin-bottom: 14px; }
+  .handled h3 { margin-bottom: 6px; }
+
+  .boss { display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px; align-items: center; }
+  .boss blockquote em { font-style: normal; }
+  .boss blockquote { margin: 0; font-family: var(--serif); font-weight: 650; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.1; letter-spacing: -0.03em; }
+  .boss-photo { position: relative; }
+  .boss-photo .photo { height: 520px; }
+  .approve { position: absolute; right: -18px; bottom: 28px; width: min(360px, 90%); background: #fff; border-radius: 22px; box-shadow: var(--shadow-lg); padding: 20px; }
+  .approve .sms { max-width: 100%; }
+
+  .faq { max-width: 820px; margin: 0 auto; }
+  .faq details { border-bottom: 1px solid var(--line); padding: 6px 0; }
+  .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 0; font-size: 20px; font-weight: 600; font-family: var(--serif); letter-spacing: -0.015em; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary .ic { transition: transform .2s; }
+  .faq details[open] summary .ic { transform: rotate(45deg); }
+  .faq details p { padding: 0 0 20px; color: var(--ink-2); }
+
+  .final { position: relative; overflow: hidden; margin: 120px 0 0; padding: 100px 0 110px; text-align: center; background: var(--navy); color: #fff; }
+  .final h2 { color: #fff; }
+  .final .hero-in h2 { font-size: clamp(40px, 5.4vw, 72px); letter-spacing: -0.025em; line-height: 1.02; }
+  footer { border-top: 1px solid var(--line); padding: 48px 0 90px; }
+  .foot { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 32px; }
+  .foot h4 { margin: 0 0 10px; font-size: 14px; font-weight: 500; color: var(--ink-3); }
+  .foot a { display: block; text-decoration: none; color: var(--ink-2); padding: 4px 0; font-size: 16px; }
+  .foot a:hover { color: var(--ink); }
+
+  @media (max-width: 1100px) {
+    .street { grid-template-columns: repeat(3, minmax(0, 1fr)); } .street a:nth-child(n+4) { display: none; }
+    .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .watch { grid-template-columns: minmax(0, 1fr); }
+    .watch-tabs { flex-direction: row; overflow-x: auto; }
+    .wtab { min-width: 230px; }
+    .steps { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 760px) {
+    .hero { padding-top: 44px; }
+    .grid3, .steps, .handled, .boss, .sec-head, .foot { grid-template-columns: minmax(0, 1fr); }
+    .street { grid-template-columns: repeat(2, minmax(0, 1fr)); } .street a:nth-child(n+3) { display: none; } .street .photo { height: 260px !important; }
+    .approve { position: relative; right: 0; bottom: 0; margin-top: -60px; margin-left: 12px; } .boss-photo .photo { height: 380px; }
+    .sec-head .lead { justify-self: start; }
+    .handled > div, .handled > div:not(:nth-child(3n+1)) { padding: 22px 0; border-left: 0; }
+    .watch { padding: 18px; border-radius: 26px; }
+    .watch-stage { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+    .prompt textarea { font-size: 18px; }
+    .prompt-bar .chip { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav class="navlinks" aria-label="Main"><a href="#helpers">Helpers</a><a href="#how">How it works</a><a href="#trust">Trust</a><a href="#faq">Questions</a></nav>
+    <nav><a class="btn btn-ghost btn-sm" href="workspace.html">Sign in</a><a class="btn btn-primary btn-sm" href="#top" onclick="document.getElementById('p').focus()">Start free</a></nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="wrap hero-in">
+      <a class="announce" href="demo.html?d=receptionist"><b>New</b> Helpers can now answer your phone, in your customers' language <i data-icon="right"></i></a>
+      <h1>Hand off the<span class="rot-line"><span class="rot" id="rot"><span>bookkeeping.</span></span></span></h1>
+      <p class="lead">Keep the part you love. Describe a job in one sentence and Errand sets up a helper with its own phone number, inbox and tools. Then it gets to work.</p>
+
+      <form class="prompt" id="promptForm">
+        <label for="p" class="sr">What should your helper do?</label>
+        <textarea id="p" rows="3" placeholder="Answer my phone when I'm busy and book appointments…"></textarea>
+        <div class="prompt-bar">
+          <button type="button" class="chip no-dot" id="addSite"><i data-icon="globe"></i> Add my website</button>
+          <button type="button" class="chip no-dot"><i data-icon="sparkle"></i> Help me describe it</button>
+          <button type="button" class="mic" id="mic" aria-label="Say it out loud" aria-pressed="false"><i data-icon="mic"></i></button>
+          <button class="round-go" id="go" aria-label="Build my helper" disabled><i data-icon="up"></i></button>
+        </div>
+      </form>
+
+      <div class="tryline">
+        <p class="kicker">Or start from something small businesses ask for every day</p>
+        <div class="row" id="tryChips"></div>
+      </div>
+
+      <div class="street" id="street"></div>
+
+      <div class="channels">
+        <p class="label">Your helper works wherever your customers already are</p>
+        <div class="row">
+          <span><i data-icon="phone"></i>Phone calls</span><span><i data-icon="sms"></i>Text messages</span><span><i data-icon="mail"></i>Email</span>
+          <span><i data-icon="whatsapp"></i>WhatsApp</span><span><i data-icon="chat"></i>Website chat</span><span><i data-icon="heart"></i>Instagram</span><span><i data-icon="telegram"></i>Telegram</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="helpers">
+    <div class="sec-head">
+      <h2>One platform.<br><em>Every job</em> you never have time for.</h2>
+      <p class="lead">Twenty helpers small businesses build most. Open one to watch it work, then make it yours in a few minutes.</p>
+    </div>
+    <div class="filters" id="filters" role="toolbar" aria-label="Filter helpers"></div>
+    <div class="grid3" id="gallery"></div>
+  </section>
+
+  <section class="block wrap">
+    <div class="sec-head">
+      <h2>Watch a helper <em>work.</em></h2>
+      <p class="lead">These are real flows from the product: the same steps your helper takes, out in the world, on your behalf.</p>
+    </div>
+    <div class="watch">
+      <div class="watch-tabs" role="tablist" id="wtabs"></div>
+      <div class="watch-stage">
+        <div id="stage"></div>
+        <div class="did-list"><p class="label">What the helper did</p><ul class="checklist" id="did" style="margin-top:8px"></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="how">
+    <div class="sec-head">
+      <h2>From one sentence to <em>working</em> in about five minutes.</h2>
+      <p class="lead">No flowcharts, no setup screens. Errand asks only what it can't figure out on its own.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3>Describe the job</h3><p class="small muted">Type it or say it, the way you'd explain it to a new employee.</p>
+        <div class="viz"><span class="kicker" style="font-size:15px">“Chase anyone who hasn't paid and text them a card link.”</span></div></div>
+      <div class="step"><span class="n">2</span><h3>Connect what it needs</h3><p class="small muted">It asks for one thing at a time: your website, a phone number, your books. Each is one tap.</p>
+        <div class="viz"><div class="row"><span class="tag"><i data-icon="globe"></i>Website</span><span class="tag"><i data-icon="book"></i>QuickBooks</span><span class="tag"><i data-icon="phone"></i>(216) 555-0148</span></div></div></div>
+      <div class="step"><span class="n">3</span><h3>Try it like a customer</h3><p class="small muted">Call it, text it, email it. Fix anything by just saying what to change.</p>
+        <div class="viz"><span class="small">“Sound a bit friendlier.”</span><br><span class="small" style="color:var(--ok)">Changed. Try again to hear it.</span></div></div>
+      <div class="step"><span class="n">4</span><h3>Put it to work</h3><p class="small muted">It runs day and night and texts you only when a decision is yours.</p>
+        <div class="viz"><span class="pill live">Working</span> <span class="small">Booked 3 drop-offs</span></div></div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="trust">
+    <div class="sec-head">
+      <h2>The hard parts, <em>handled.</em></h2>
+      <p class="lead">This is where other tools leave you stuck with settings. Errand does it inside the conversation.</p>
+    </div>
+    <div class="handled">
+      <div><i data-icon="phone"></i><h3>Its own phone number</h3><p class="small muted">A local number in seconds, or your existing number forwarded. Voice, texts and WhatsApp on one line.</p></div>
+      <div><i data-icon="mail"></i><h3>Its own inbox</h3><p class="small muted">A real email address set up so messages land in inboxes, not spam. Or it works from yours.</p></div>
+      <div><i data-icon="shield"></i><h3>Texting that gets delivered</h3><p class="small muted">We handle the business-texting registration phone carriers require, so messages aren't blocked.</p></div>
+      <div><i data-icon="lock"></i><h3>Safe connections</h3><p class="small muted">Banks are read-only. Every connection says what the helper will and won't do before you agree.</p></div>
+      <div><i data-icon="users"></i><h3>Right contacts only</h3><p class="small muted">Marketing goes only to people who agreed to hear from you. Cold calls go only to businesses, never homes.</p></div>
+      <div><i data-icon="globe"></i><h3>Speaks your customers' language</h3><p class="small muted">Answers in Spanish, Italian, Mandarin and more, whatever the customer speaks.</p></div>
+    </div>
+  </section>
+
+  <section class="block wrap">
+    <div class="boss">
+      <blockquote>You stay the boss. Anything that <em>spends money</em> or <em>speaks for you</em> in a new way waits for your yes.</blockquote>
+      <div class="boss-photo"><div class="photo"><img src="assets/phone.jpg" alt="An owner reading a text from her helper"></div><div class="approve">
+        <p class="label">Text from Max, invoice chaser</p>
+        <div class="sms agent" style="margin-top:10px"><div class="who">Max</div>Janet still owes $385 after two reminders. Want me to send a third, or would you rather call her?</div>
+        <div class="row" style="margin-top:14px"><button class="btn btn-sm btn-primary">Send the reminder</button><button class="btn btn-sm">I'll call her</button></div>
+        <p class="small faint" style="margin-top:14px">Or just reply to the text in your own words.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="faq">
+    <div class="sec-head" style="grid-template-columns:1fr"><h2 class="center">Questions owners ask</h2></div>
+    <div class="faq">
+      <details open><summary>Do I need to know anything about AI or computers?<i data-icon="plus"></i></summary><p>No. If you can send a text, you can build a helper. You can even ask a family member to help through a link; they see the same screen you do.</p></details>
+      <details><summary>Will customers know they're talking to a helper?<i data-icon="plus"></i></summary><p>Yes, when it matters. Helpers that make calls say up front that they're an AI assistant working for your business. You choose the name and voice.</p></details>
+      <details><summary>What if it gets something wrong?<i data-icon="plus"></i></summary><p>It follows your house rules, gives "starting at" prices instead of guesses, and takes a message when it isn't sure. Every conversation is saved, and you can fix its behavior by just telling it.</p></details>
+      <details><summary>Can it move money or sign anything?<i data-icon="plus"></i></summary><p>Not without your yes. Bank connections are read-only. Payments go through links customers pay themselves, straight into your account.</p></details>
+      <details><summary>What does it cost?<i data-icon="plus"></i></summary><p>A flat monthly price per helper, with calls, texts and emails included up to a generous limit. No credits to count. (Pricing is still being designed for this prototype.)</p></details>
+    </div>
+  </section>
+
+  <section class="final">
+    
+    <div class="wrap hero-in">
+      <h2>What should your first<br>helper do?</h2>
+      <form class="prompt" id="promptForm2" style="margin-top:34px">
+        <label for="p2" class="sr">Describe the job</label>
+        <textarea id="p2" rows="2" placeholder="Follow up on every quote I send…"></textarea>
+        <div class="prompt-bar"><button class="round-go" style="margin-left:auto" aria-label="Build my helper"><i data-icon="up"></i></button></div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><a class="brand" href="index.html" style="padding:0">errand<i>.</i></a><p class="small faint" style="margin-top:10px">Helpers for small businesses. A design prototype.</p></div>
+    <div><h4>Helpers</h4><a href="demo.html?d=receptionist">Phone receptionist</a><a href="demo.html?d=bookkeeper">Bookkeeper</a><a href="demo.html?d=invoices">Invoice chaser</a><a href="demo.html?d=social">Social media</a></div>
+    <div><h4>Product</h4><a href="#how">How it works</a><a href="#trust">Trust and safety</a><a href="workspace.html">Your helpers</a><a href="anywhere.html">Talk to them anywhere</a></div>
+    <div><h4>Prototype</h4><a href="map.html">Screen map</a><a href="ux-notes.html">UX notes</a></div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+/* Rotating job in the headline */
+const JOBS = [['bookkeeping.', 'bookkeeper'], ['ringing phone.', 'receptionist'], ['social posts.', 'social'], ['late invoices.', 'invoices'], ['website leads.', 'leads'], ['cold calls.', 'coldcall'], ['newsletter.', 'newsletter'], ['Google reviews.', 'reviews']];
+const STREET = ['bookkeeper', 'receptionist', 'social', 'invoices', 'leads'];
+$('#street').innerHTML = STREET.map(id => { const d = demoById(id); return `<a href="demo.html?d=${id}" data-id="${id}">${photoHTML(d, { h: 320, tag: false })}<p class="who"><b>${d.biz}</b>, ${d.owner}</p></a>`; }).join('');
+let ji = 0; const rot = $('#rot');
+const markStreet = id => $$('#street a').forEach(a => a.classList.toggle('on', a.dataset.id === id));
+markStreet(JOBS[0][1]);
+setInterval(() => { rot.classList.add('out'); setTimeout(() => { ji = (ji + 1) % JOBS.length; rot.innerHTML = `<span>${JOBS[ji][0]}</span>`; rot.classList.remove('out'); markStreet(JOBS[ji][1]); }, 460); }, 2800);
+
+/* Prompt */
+function hookPrompt(formId, taId) {
+  const f = document.getElementById(formId), ta = document.getElementById(taId), go = f.querySelector('.round-go');
+  const sync = () => go.disabled = ta.value.trim().length < 6;
+  ta.addEventListener('input', sync); sync();
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); f.requestSubmit(); } });
+  f.addEventListener('submit', e => {
+    e.preventDefault(); const v = ta.value.trim(); if (!v) return;
+    const d = matchDemo(v); STORE.set('prompt', v);
+    location.href = `build.html?d=${d.id}&p=${encodeURIComponent(v)}`;
+  });
+  return { ta, sync };
+}
+const P = hookPrompt('promptForm', 'p'); hookPrompt('promptForm2', 'p2');
+
+const TRY = ['receptionist', 'bookkeeper', 'invoices', 'coldcall', 'newsletter', 'reviews'];
+$('#tryChips').innerHTML = TRY.map(id => `<button class="chip" type="button" data-id="${id}">${demoById(id).role}</button>`).join('');
+$('#tryChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; P.ta.value = demoById(c.dataset.id).prompt; P.sync(); P.ta.focus(); });
+
+$('#addSite').onclick = () => { if (!/https?:|\.com/.test(P.ta.value)) { P.ta.value = (P.ta.value ? P.ta.value + ' ' : '') + 'My website is '; P.ta.focus(); P.sync(); } };
+const mic = $('#mic');
+mic.onclick = async () => {
+  if (mic.classList.contains('listening')) return;
+  mic.classList.add('listening'); P.ta.value = ''; P.ta.placeholder = 'Listening…';
+  await wait(900);
+  for (const w of demoById('receptionist').prompt.split(' ')) { P.ta.value += (P.ta.value ? ' ' : '') + w; await wait(60); }
+  mic.classList.remove('listening'); P.sync();
+};
+
+/* Gallery with filters */
+const counts = DEMOS.reduce((a, d) => (a[d.cat] = (a[d.cat] || 0) + 1, a), {});
+$('#filters').innerHTML = `<button aria-pressed="true" data-cat="all">All helpers <span class="n">${DEMOS.length}</span></button>` +
+  Object.entries(CATS).map(([k, c]) => `<button aria-pressed="false" data-cat="${k}">${icon(CAT_ICON[k])}${c.label} <span class="n">${counts[k]}</span></button>`).join('');
+$('#gallery').innerHTML = DEMOS.map(demoCardHTML).join('') + `<a class="dcard own" href="#top" data-cat="all" onclick="setTimeout(()=>document.getElementById('p').focus(),400)"><div class="own-in"><span class="ava lg" style="--tint:#FCEFD2">+</span><h3 class="h3-serif">Something else?</h3><p class="muted">Describe any job in your own words. If a person could do it by phone, text or email, a helper probably can.</p><span class="btn btn-primary" style="align-self:flex-start">Describe your own</span></div></a>`;
+$('#filters').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $$('#filters button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  $$('#gallery .dcard').forEach(c => c.classList.toggle('hide', b.dataset.cat !== 'all' && c.dataset.cat !== b.dataset.cat && c.dataset.cat !== 'all'));
+});
+
+/* Watch a helper work */
+const FEATURE = ['receptionist', 'bookkeeper', 'social', 'invoices', 'coldcall'];
+$('#wtabs').innerHTML = FEATURE.map((id, i) => { const d = demoById(id); return `<button class="wtab" role="tab" aria-selected="${i === 0}" data-id="${id}">${avatarHTML(d)}<span><strong>${d.name}, ${d.role.toLowerCase()}</strong><span class="d">${d.biz}</span></span></button>`; }).join('');
+function play(id) {
+  const d = demoById(id); $('#did').innerHTML = '';
+  playWatch($('#stage'), d, { onDid: t => $('#did').insertAdjacentHTML('beforeend', `<li class="ok"><span class="box">${icon('check')}</span><span>${esc(t)}</span></li>`) });
+}
+$('#wtabs').addEventListener('click', e => { const t = e.target.closest('.wtab'); if (!t) return; $$('.wtab').forEach(x => x.setAttribute('aria-selected', String(x === t))); play(t.dataset.id); });
+const io = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { play(FEATURE[0]); io.disconnect(); } }, { threshold: .25 });
+io.observe($('.watch'));
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Try your helper</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; padding: 36px 0 140px; align-items: start; }
+  .head { padding-top: 44px; }
+  .starter { background: var(--surface); border: 1px solid var(--line); border-radius: 32px; box-shadow: var(--shadow-lg); padding: 56px 32px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .ring { width: 92px; height: 92px; border-radius: 50%; background: var(--ok); color: #fff; border: 0; display: grid; place-items: center; cursor: pointer; box-shadow: 0 12px 30px -10px rgba(46,138,94,.7); transition: transform .15s; }
+  .ring:hover { transform: scale(1.05); }
+  .ring.navy { background: var(--navy); box-shadow: 0 12px 30px -10px rgba(19,39,74,.7); }
+  .ring .ic { width: 36px; height: 36px; }
+  #stage { display: flex; justify-content: center; }
+  .change-ok { display: flex; gap: 12px; align-items: center; padding: 14px 16px; background: var(--ok-tint); border-radius: 16px; animation: rise .25s ease both; }
+  .change-ok .ic { color: var(--ok); }
+  @media (max-width: 1000px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+</style>
+</head>
+<body>
+<header class="topbar solid">
+  <div class="wrap">
+    <a class="brand" href="index.html">errand<i>.</i></a>
+    <nav><span class="pill wait">Practice mode: nothing reaches real customers</span></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="head stack">
+    <h1 id="title"></h1>
+    <p class="lead" id="sub"></p>
+  </div>
+
+  <div class="grid">
+    <section aria-label="Practice run">
+      <div id="stage"></div>
+    </section>
+
+    <section class="stack-lg" aria-label="Results">
+      <div class="panel">
+        <h3 class="h3-serif">What <span class="nm"></span> did</h3>
+        <ul class="checklist" id="did" style="margin-top:10px"><li class="pending"><span class="box"></span>Start the practice run to see it work.</li></ul>
+      </div>
+
+      <div class="stack">
+        <h3 class="h3-serif">Want to change something?</h3>
+        <p class="muted">Say it the way you'd tell a new employee. No settings to find.</p>
+        <form class="field" id="changeForm"><button type="button" class="icon-btn" aria-label="Talk instead of typing"><i data-icon="mic"></i></button><input id="changeIn" placeholder="For example: keep messages shorter"><button class="round-go" aria-label="Change it"><i data-icon="up"></i></button></form>
+        <div class="row" id="sugg">
+          <button class="chip" type="button">Sound a bit friendlier</button>
+          <button class="chip" type="button">Keep messages shorter</button>
+          <button class="chip" type="button">Always mention our website</button>
+        </div>
+        <div id="changes" class="stack"></div>
+      </div>
+
+      <div class="panel hard spread" style="border-radius:28px">
+        <div><h3>Happy with <span class="nm"></span>?</h3><p class="muted small">It starts working right away. You can pause it anytime.</p></div>
+        <div class="row"><a class="btn btn-ghost" id="back" href="#">Back to setup</a><a class="btn btn-primary btn-lg" id="golive" href="#"><span>Put <span class="nm"></span> to work</span></a></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script src="demos.js"></script>
+<script src="render.js"></script>
+<script>
+const D = demoById(new URLSearchParams(location.search).get('d')) || demoById('receptionist');
+const NAME = STORE.get('name:' + D.id, D.name);
+const d = { ...D, name: NAME };
+$$('.nm').forEach(n => n.textContent = NAME);
+document.title = `Try ${NAME}`;
+const k = d.watch.kind;
+const conv = ['sms', 'call', 'chat'].includes(k);
+$('#title').innerHTML = conv ? `Try <em>${NAME}</em> like a customer would` : `Watch <em>${NAME}</em> do a practice run`;
+$('#sub').textContent = conv
+  ? 'This is a practice conversation with real details from your business. Nothing is sent to anyone.'
+  : `${NAME} works on a copy of your real data. Nothing is saved or sent until you put it to work.`;
+$('#back').href = `build.html?d=${d.id}`; $('#golive').href = `live.html?d=${d.id}`;
+
+const startLabel = { call: `Call ${NAME}`, sms: 'Start a practice conversation', chat: 'Open the website chat', email: 'Run it on a real example', ledger: "Run it on this week's bank feed", post: 'Text it a photo of your work' }[k];
+$('#stage').innerHTML = `<div class="starter">${avatarHTML(d, 'xl')}<h2 style="font-size:32px">${esc(d.watch.title)}</h2>
+  <button class="ring ${k === 'call' ? '' : 'navy'}" id="go" aria-label="${startLabel}">${icon(k === 'call' ? 'phone' : 'play')}</button><p class="muted">${startLabel}</p></div>`;
+function run() {
+  $('#did').innerHTML = '';
+  const again = $('#again'); if (again) again.remove();
+  playWatch($('#stage'), d, {
+    onDid: t => $('#did').insertAdjacentHTML('beforeend', `<li class="ok"><span class="box">${icon('check')}</span><span>${esc(t)}</span></li>`),
+    onDone: () => {
+      $('#did').insertAdjacentHTML('afterend', `<button class="btn btn-sm" id="again" style="margin-top:14px">${icon('refresh')} Run it again</button>`);
+      $('#again').onclick = run;
+    }
+  });
+}
+$('#go').onclick = run;
+
+function applyChange(text) {
+  const box = el(`<div class="change-ok"><i data-icon="check"></i><span style="flex:1"><strong>Changed.</strong> <span class="t"></span> Run it again to see.</span><button class="btn btn-sm" type="button">Undo</button></div>`);
+  box.querySelector('.t').textContent = `${NAME} will now: ${text.charAt(0).toLowerCase() + text.slice(1)}.`;
+  box.querySelector('button').onclick = () => box.remove();
+  $('#changes').prepend(box);
+}
+$('#sugg').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) applyChange(c.textContent.trim()); });
+$('#changeForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#changeIn').value.trim(); if (v) { applyChange(v); $('#changeIn').value = ''; } });
+</script>
+</body>
+</html>
